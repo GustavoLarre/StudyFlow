@@ -20,9 +20,13 @@ class FlashcardResponse(BaseModel):
 
 def generate_flashcards_with_ai(title: str, content: str) -> List[dict]:
     prompt = f"""
-Você é um assistente educacional especialista em criar flashcards de estudo.
-Com base no título e no conteúdo fornecidos abaixo, crie uma lista de flashcards (perguntas e respostas diretas).
-O seu retorno DEVE ser estritamente um objeto JSON válido contendo uma chave "flashcards" que seja um array de objetos com as chaves "front" e "back". Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
+Você é um assistente educacional especialista em criar flashcards de estudo altamente eficazes.
+Com base no título e no conteúdo fornecidos abaixo, crie uma lista detalhada com **pelo menos 2 ou mais flashcards** focados em conceitos-chave.
+
+Regras obrigatórias:
+1. Cada flashcard deve ser granular e direto ao ponto (ex: Front: "Qual protocolo opera na camada de aplicação?" / Back: "HTTP").
+2. O seu retorno DEVE ser estritamente um objeto JSON válido contendo uma chave "flashcards" que seja um array de objetos com as chaves "front" e "back".
+3. Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
 
 Título: {title}
 Conteúdo: {content}
