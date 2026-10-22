@@ -9,16 +9,20 @@ from fastapi import HTTPException
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen")
 
-# Modelo Pydantic para validar cada flashcard individualmente
+# 1. Modelo Pydantic para um único flashcard
 class FlashcardSchema(BaseModel):
     front: str = Field(..., description="A pergunta ou conceito na frente do flashcard")
     back: str = Field(..., description="A resposta ou explicação no verso do flashcard")
+
+# 2. Modelo Pydantic para a resposta completa da IA (Refinamento de Saída)
+class FlashcardResponse(BaseModel):
+    flashcards: List[FlashcardSchema] = Field(..., description="Lista de flashcards gerados pela IA")
 
 def generate_flashcards_with_ai(title: str, content: str) -> List[dict]:
     prompt = f"""
 Você é um assistente educacional especialista em criar flashcards de estudo.
 Com base no título e no conteúdo fornecidos abaixo, crie uma lista de flashcards (perguntas e respostas diretas).
-O seu retorno DEVE ser estritamente um array JSON válido de objetos, contendo apenas as chaves "front" e "back". Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
+O seu retorno DEVE ser estritamente um objeto JSON válido contendo uma chave "flashcards" que seja um array de objetos com as chaves "front" e "back". Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
 
 Título: {title}
 Conteúdo: {content}
@@ -36,21 +40,20 @@ Conteúdo: {content}
         response.raise_for_status()
         
         data = response.json()
-        raw_text = data.get("response", "[]")
+        raw_text = data.get("response", "{}")
 
         # Garante que o texto retornado pela LLM seja parseado como JSON
         parsed_data = json.loads(raw_text)
 
-        if not isinstance(parsed_data, list):
-            raise ValueError("A IA não retornou uma lista válida de flashcards.")
+        # Se a LLM retornar uma lista direta em vez do objeto com a chave "flashcards", adaptamos para manter compatibilidade
+        if isinstance(parsed_data, list):
+            parsed_data = {"flashcards": parsed_data}
 
-        # Valida cada item usando Pydantic para garantir conformidade do schema
-        validated_flashcards = []
-        for item in parsed_data:
-            validated_card = FlashcardSchema(**item)
-            validated_flashcards.append(validated_card.model_dump())
+        # Validação estrita de ponta a ponta com o Pydantic (FlashcardResponse)
+        validated_response = FlashcardResponse(**parsed_data)
 
-        return validated_flashcards
+        # Retorna a lista de dicionários já validada e limpa
+        return [card.model_dump() for card in validated_response.flashcards]
 
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=503, detail=f"Erro de comunicação com o Ollama: {str(e)}")

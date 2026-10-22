@@ -4,13 +4,15 @@ from app.services.ai_service import generate_flashcards_with_ai
 
 @patch("app.services.ai_service.requests.post")
 def test_ai_service_success(mock_requests_post):
-    """Garante que o serviço de IA chama o Ollama corretamente e mapeia a resposta."""
+    """Garante que o serviço de IA chama o Ollama corretamente e valida a resposta com FlashcardResponse."""
     
-    # Simulamos a resposta que o Ollama retornaria (um JSON contendo o texto gerado em formato JSON string)
-    mock_response_data = [
-        {"front": "O que é FastAPI?", "back": "Um framework web moderno e rápido para Python."},
-        {"front": "O que é Ollama?", "back": "Ferramenta para rodar LLMs localmente."}
-    ]
+    # Simulamos a resposta do Ollama retornando o objeto envelopado com a chave "flashcards"
+    mock_response_data = {
+        "flashcards": [
+            {"front": "O que é FastAPI?", "back": "Um framework web moderno e rápido para Python."},
+            {"front": "O que é Ollama?", "back": "Ferramenta para rodar LLMs localmente."}
+        ]
+    }
     
     mock_res_instance = MagicMock()
     mock_res_instance.status_code = 200
@@ -22,7 +24,7 @@ def test_ai_service_success(mock_requests_post):
     # Executamos a função do serviço
     result = generate_flashcards_with_ai("Introdução ao FastAPI", "FastAPI é rápido e usa Pydantic.")
 
-    # Validamos se o resultado veio estruturado como esperado
+    # Validamos se o resultado veio estruturado e validado pelo Pydantic
     assert isinstance(result, list)
     assert len(result) == 2
     assert result[0]["front"] == "O que é FastAPI?"
