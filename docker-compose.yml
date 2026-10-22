@@ -1,0 +1,29 @@
+networks:
+  studyflow-net:
+    driver: bridge
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: studyflow-ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - studyflow-net
+    restart: unless-stopped
+
+  ai-service:
+    build: ./ai-service
+    container_name: studyflow-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ./ai-service:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - studyflow-net
+    depends_on:
+      - ollama
+    restart: unless-stopped

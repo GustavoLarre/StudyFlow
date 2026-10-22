@@ -1,0 +1,9 @@
+# Python / Pytest
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+env/
+
+# Docker / Volumes locais
+.env
