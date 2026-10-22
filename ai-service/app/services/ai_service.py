@@ -20,18 +20,30 @@ class FlashcardResponse(BaseModel):
 
 def generate_flashcards_with_ai(title: str, content: str) -> List[dict]:
     prompt = f"""
-Você é um assistente educacional especialista em criar flashcards de estudo altamente eficazes.
-Com base no título e no conteúdo fornecidos abaixo, crie uma lista detalhada com **pelo menos 2 ou mais flashcards** focados em conceitos-chave.
+Você é um professor especialista em criar flashcards de estudo rigorosos e 100% fiéis ao material fornecido.
+Com base no título e no conteúdo abaixo, crie uma lista de flashcards focados em conceitos-chave.
 
-Regras obrigatórias:
-1. Cada flashcard deve ser granular e direto ao ponto (ex: Front: "Qual protocolo opera na camada de aplicação?" / Back: "HTTP").
-2. O seu retorno DEVE ser estritamente um objeto JSON válido contendo uma chave "flashcards" que seja um array de objetos com as chaves "front" e "back".
-3. Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
+REGRAS CRÍTICAS:
+1. Baseie-se APENAS nas informações explícitas do texto abaixo. NUNCA invente definições científicas, termos ou conceitos que não estejam escritos no texto.
+2. Cada flashcard deve ser direto ao ponto (Front: pergunta clara / Back: resposta curta baseada estritamente no texto).
+3. O seu retorno DEVE ser estritamente um objeto JSON válido contendo uma chave "flashcards" que seja um array de objetos com as chaves "front" e "back".
+4. Não inclua nenhum texto adicional, markdown extra ou explicações fora do JSON.
 
+Exemplo de bom comportamento:
+Texto: "A glicólise ocorre no citoplasma e quebra a glicose em piruvato."
+Saída JSON:
+{{
+  "flashcards": [
+    {{"front": "Onde ocorre a glicólise?", "back": "No citoplasma."}},
+    {{"front": "O que a glicólise faz com a glicose?", "back": "A quebra em piruvato."}}
+  ]
+}}
+
+Agora, com base no título e no conteúdo abaixo, crie flashcards seguindo rigorosamente este mesmo padrão de precisão e usando APENAS o texto fornecido (sem inventar termos):
 Título: {title}
 Conteúdo: {content}
 """
-
+    
     payload = {
         "model": OLLAMA_MODEL,
         "prompt": prompt,
