@@ -1,9 +1,24 @@
-# Python / Pytest
+# === Python / Pytest ===
 __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
 env/
 
-# Docker / Volumes locais
+# === Node.js / Backend ===
+backend/node_modules/
+backend/coverage/
+backend/dist/
+backend/build/
+
+# === Variáveis de Ambiente & Credenciais (Altamente Sensíveis) ===
 .env
+backend/.env
+*.env
+serviceAccountKey.json
+firebase-adminsdk.json
+
+# === Sistema / IDE ===
+.DS_Store
+.idea/
+.vscode/
