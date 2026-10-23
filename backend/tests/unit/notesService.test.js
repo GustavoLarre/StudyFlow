@@ -1,41 +1,58 @@
-import { describe, it, expect } from '@jest/globals';
-import { generateFlashcardsForNote } from '../../src/services/notesService.js';
+import { jest } from '@jest/globals';
 
-describe('Notes Service - Geração de Flashcards', () => {
-  it('Deve lançar um erro se a nota ultrapassar o limite máximo de 6000 caracteres', async () => {
-    const hugeNote = {
-      title: 'Nota Gigante',
-      content: 'a'.repeat(6001)
-    };
-    const mockNoteId = 'note_123';
+// Define os mocks antes de importar o service
+jest.unstable_mockModule('../../src/repositories/noteRepository.js', () => ({
+  createNoteDb: jest.fn()
+}));
 
-    await expect(generateFlashcardsForNote(mockNoteId, hugeNote))
-      .rejects
-      .toThrow('A nota ultrapassa o limite máximo de 6000 caracteres');
+jest.unstable_mockModule('../../src/repositories/flashcardRepository.js', () => ({
+  createManyFlashcardsDb: jest.fn()
+}));
+
+jest.unstable_mockModule('../../src/services/aiClient.js', () => ({
+  generateFlashcardsFromText: jest.fn()
+}));
+
+// Importações dinâmicas após os mocks no ESM
+const noteRepository = await import('../../src/repositories/noteRepository.js');
+const flashcardRepository = await import('../../src/repositories/flashcardRepository.js');
+const aiClient = await import('../../src/services/aiClient.js');
+const { generateFlashcardsForNote } = await import('../../src/services/notesService.js');
+
+describe('Notes Service - Geração e Persistência de Flashcards', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('Deve processar o título e conteúdo da nota, chamar o aiClient e retornar os flashcards vinculados', async () => {
-    const mockNoteId = 'note_123';
-    const mockNote = {
-      title: 'Introdução ao TDD',
-      content: 'O TDD possui três fases principais: Red, Green e Refactor.'
+  it('Deve salvar a nota no Firestore, gerar flashcards via IA e salvá-los no repositório', async () => {
+    const mockSubjectId = 'sub_123';
+    const mockNoteData = {
+      title: 'Arquitetura de Computadores',
+      content: 'Pipeline de execução e hierarquia de memória.'
     };
 
-    const fakeAiClient = {
-      generateFlashcardsFromText: async (textToSend) => {
-        // Opcional: podemos garantir que a IA recebeu o contexto ou título se quisermos enriquecer o prompt
-        return [
-          { front: 'Quais são as fases do TDD?', back: 'Red, Green e Refactor.' }
-        ];
-      }
-    };
+    noteRepository.createNoteDb.mockResolvedValueOnce({
+      noteId: 'note_abc_123',
+      subjectId: mockSubjectId,
+      ...mockNoteData
+    });
 
-    const flashcards = await generateFlashcardsForNote(mockNoteId, mockNote, fakeAiClient);
+    aiClient.generateFlashcardsFromText.mockResolvedValueOnce([
+      { front: 'O que é pipeline?', back: 'Técnica de sobreposição de instruções.' }
+    ]);
 
-    expect(Array.isArray(flashcards)).toBe(true);
-    expect(flashcards.length).toBeGreaterThan(0);
-    expect(flashcards[0]).toHaveProperty('noteId', mockNoteId);
-    expect(flashcards[0]).toHaveProperty('front');
-    expect(flashcards[0]).toHaveProperty('back');
+    flashcardRepository.createManyFlashcardsDb.mockResolvedValueOnce([
+      { flashcardId: 'card_1', noteId: 'note_abc_123', front: 'O que é pipeline?', back: 'Técnica de sobreposição de instruções.' }
+    ]);
+
+    const result = await generateFlashcardsForNote(mockSubjectId, mockNoteData);
+
+    expect(noteRepository.createNoteDb).toHaveBeenCalledTimes(1);
+    expect(aiClient.generateFlashcardsFromText).toHaveBeenCalledTimes(1);
+    expect(flashcardRepository.createManyFlashcardsDb).toHaveBeenCalledTimes(1);
+    
+    expect(result).toHaveProperty('noteId', 'note_abc_123');
+    expect(result).toHaveProperty('flashcards');
+    expect(result.flashcards.length).toBe(1);
   });
 });

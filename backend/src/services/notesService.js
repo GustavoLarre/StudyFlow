@@ -1,93 +1,48 @@
-import * as defaultAiClient from './aiClient.js';
+import { createNoteDb } from '../repositories/noteRepository.js';
+import { createManyFlashcardsDb } from '../repositories/flashcardRepository.js';
+import { generateFlashcardsFromText } from './aiClient.js';
 
-const MAX_NOTE_LENGTH = 6000;
-const MAX_CHUNKS = 3;
-const notesDb = [];
+const MAX_NOTE_CHARS = 6000;
 
-function chunkText(text, maxChunks = MAX_CHUNKS) {
-  if (text.length <= 2000) return [text];
-
-  const chunkSize = Math.ceil(text.length / maxChunks);
-  const chunks = [];
-
-  for (let i = 0; i < text.length; i += chunkSize) {
-    chunks.push(text.slice(i, i + chunkSize));
+export async function generateFlashcardsForNote(subjectId, noteInput) {
+  if (!noteInput || !noteInput.content) {
+    throw new Error('Conteúdo da nota é obrigatório.');
   }
 
-  return chunks;
-}
-
-export async function createNoteForSubject({ subjectId, title, content }) {
-  if (!subjectId) {
-    throw new Error('O ID da matéria é obrigatório para criar uma nota.');
+  if (noteInput.content.length > MAX_NOTE_CHARS) {
+    throw new Error(`A nota ultrapassou o limite máximo de ${MAX_NOTE_CHARS} caracteres.`);
   }
 
-  if (!title || title.trim() === '') {
-    throw new Error('O título da nota é obrigatório.');
-  }
-
-  if (!content) {
-    throw new Error('O conteúdo da nota é obrigatório.');
-  }
-
-  // Validação dos 6.000 caracteres
-  if (content.length > MAX_NOTE_LENGTH) {
-    throw new Error('A nota excede o limite máximo de 6000 caracteres.');
-  }
-
-  const newNote = {
-    noteId: `note_${Date.now()}`,
+  // 1. Salva a nota no Firestore usando o repositório real
+  const noteDataToSave = {
     subjectId,
-    title: title.trim(),
-    content,
+    title: noteInput.title || 'Nota sem título',
+    content: noteInput.content,
     createdAt: new Date().toISOString()
   };
 
-  notesDb.push(newNote);
-  return newNote;
-}
+  const savedNote = await createNoteDb(noteDataToSave);
 
-export async function getNotesBySubject(subjectId) {
-  if (!subjectId) {
-    throw new Error('O ID da matéria é obrigatório.');
-  }
+  // 2. Chama a IA para gerar os flashcards baseados no conteúdo
+  const generatedCardsRaw = await generateFlashcardsFromText(savedNote.content);
 
-  return notesDb.filter(note => note.subjectId === subjectId);
-}
-
-/**
- * Orquestra a conversão de uma nota em flashcards via IA.
- * A nota original { title, content } permanece estritamente imutável.
- */
-export async function generateFlashcardsForNote(noteId, noteObject, aiClient = defaultAiClient) {
-  if (!noteObject || !noteObject.content) {
-    throw new Error('O conteúdo da nota não pode estar vazio.');
-  }
-
-  if (noteObject.content.length > MAX_NOTE_LENGTH) {
-    throw new Error(`A nota ultrapassa o limite máximo de ${MAX_NOTE_LENGTH} caracteres.`);
-  }
-
-  const textChunks = chunkText(noteObject.content);
-  let allGeneratedFlashcards = [];
-
-  for (const chunk of textChunks) {
-    const promptPayload = `Título: ${noteObject.title || 'Sem Título'}\n\n${chunk}`;
-    
-    const flashcardsFromAi = await aiClient.generateFlashcardsFromText(promptPayload);
-    
-    if (Array.isArray(flashcardsFromAi)) {
-      allGeneratedFlashcards = allGeneratedFlashcards.concat(flashcardsFromAi);
-    }
-  }
-
-  // Mapeia os flashcards vinculando ao noteId de origem
-  const flashcardsToPersist = allGeneratedFlashcards.map((card) => ({
-    noteId,
+  // 3. Prepara os flashcards com o ID da nota recém-criada
+  const flashcardsToInsert = generatedCardsRaw.map(card => ({
+    noteId: savedNote.noteId,
+    subjectId,
     front: card.front,
     back: card.back,
-    createdAt: new Date().toISOString()
+    interval: 0,
+    repetition: 0,
+    easeFactor: 2.5,
+    dueDate: new Date().toISOString()
   }));
 
-  return flashcardsToPersist;
+  // 4. Salva os flashcards em lote no Firestore
+  const savedFlashcards = await createManyFlashcardsDb(flashcardsToInsert);
+
+  return {
+    ...savedNote,
+    flashcards: savedFlashcards
+  };
 }

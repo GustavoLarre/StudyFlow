@@ -1,7 +1,7 @@
 import { createNoteDb, getNotesBySubjectDb, getNoteByIdDb } from '../../src/repositories/noteRepository.js';
 
 describe('Repositório de Notas - Firestore', () => {
-  const mockSubjectId = 'sub_test_123';
+  const mockSubjectId = `sub_test_${Date.now()}`;
   let createdNoteId;
 
   it('Deve criar uma nota no Firestore com sucesso', async () => {
@@ -26,7 +26,11 @@ describe('Repositório de Notas - Firestore', () => {
 
     expect(Array.isArray(notes)).toBe(true);
     expect(notes.length).toBeGreaterThan(0);
-    expect(notes[0]).toHaveProperty('noteId', createdNoteId);
+    
+    // Encontra especificamente a nota criada neste escopo de teste
+    const foundNote = notes.find(n => n.noteId === createdNoteId);
+    expect(foundNote).toBeDefined();
+    expect(foundNote.subjectId).toBe(mockSubjectId);
   });
 
   it('Deve buscar uma nota específica pelo ID', async () => {
