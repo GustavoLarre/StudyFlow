@@ -2,6 +2,7 @@ import * as defaultAiClient from './aiClient.js';
 
 const MAX_NOTE_LENGTH = 6000;
 const MAX_CHUNKS = 3;
+const notesDb = [];
 
 function chunkText(text, maxChunks = MAX_CHUNKS) {
   if (text.length <= 2000) return [text];
@@ -14,6 +15,44 @@ function chunkText(text, maxChunks = MAX_CHUNKS) {
   }
 
   return chunks;
+}
+
+export async function createNoteForSubject({ subjectId, title, content }) {
+  if (!subjectId) {
+    throw new Error('O ID da matéria é obrigatório para criar uma nota.');
+  }
+
+  if (!title || title.trim() === '') {
+    throw new Error('O título da nota é obrigatório.');
+  }
+
+  if (!content) {
+    throw new Error('O conteúdo da nota é obrigatório.');
+  }
+
+  // Validação dos 6.000 caracteres
+  if (content.length > MAX_NOTE_LENGTH) {
+    throw new Error('A nota excede o limite máximo de 6000 caracteres.');
+  }
+
+  const newNote = {
+    noteId: `note_${Date.now()}`,
+    subjectId,
+    title: title.trim(),
+    content,
+    createdAt: new Date().toISOString()
+  };
+
+  notesDb.push(newNote);
+  return newNote;
+}
+
+export async function getNotesBySubject(subjectId) {
+  if (!subjectId) {
+    throw new Error('O ID da matéria é obrigatório.');
+  }
+
+  return notesDb.filter(note => note.subjectId === subjectId);
 }
 
 /**
@@ -29,13 +68,10 @@ export async function generateFlashcardsForNote(noteId, noteObject, aiClient = d
     throw new Error(`A nota ultrapassa o limite máximo de ${MAX_NOTE_LENGTH} caracteres.`);
   }
 
-  // Opcional: Podemos incluir o título no contexto enviado à IA se desejado, 
-  // mas fatiamos principalmente o content para gerar os cartões.
   const textChunks = chunkText(noteObject.content);
   let allGeneratedFlashcards = [];
 
   for (const chunk of textChunks) {
-    // Se quiser dar contexto para a IA, pode enviar "Título: [title]\n\nConteúdo: [chunk]"
     const promptPayload = `Título: ${noteObject.title || 'Sem Título'}\n\n${chunk}`;
     
     const flashcardsFromAi = await aiClient.generateFlashcardsFromText(promptPayload);

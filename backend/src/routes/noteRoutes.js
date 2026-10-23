@@ -1,18 +1,22 @@
 import { Router } from 'express';
+import * as notesController from '../controllers/notesController.js';
 import { generateFlashcardsForNote } from '../services/notesService.js';
 
 const router = Router();
 
+// 1. Rotas de Notas por Matéria (Fase 1)
+router.post('/subjects/:subjectId/notes', notesController.createNote);
+router.get('/subjects/:subjectId/notes', notesController.listNotes);
+
 /**
+ * 2. Rota de Geração de Flashcards via IA (Fase 2)
  * POST /notes/:noteId/generate-flashcards
- * Dispara a conversão de uma nota em flashcards via IA.
  */
-router.post('/:noteId/generate-flashcards', async (req, res) => {
+router.post('/notes/:noteId/generate-flashcards', async (req, res) => {
   try {
     const { noteId } = req.params;
 
     // Nota simulada/mockada por enquanto antes de ligar o Firestore real.
-    // Futuramente, buscaremos o { title, content } diretamente do Firestore usando o noteId.
     const mockFetchedNote = {
       title: 'Nota de Estudo',
       content: 'Conteúdo da nota recuperado do banco de dados.'
