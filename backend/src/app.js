@@ -8,6 +8,7 @@ import express from 'express';
 import subjectRoutes from './routes/subjectRoutes.js';
 import noteRoutes from './routes/noteRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/health', (req, res) => {
 app.use('/subjects', subjectRoutes);
 app.use('/', noteRoutes);       // Contém rotas como /subjects/:subjectId/notes e /notes/:noteId/generate-flashcards
 app.use('/', flashcardRoutes);  // Contém rotas como /notes/:noteId/flashcards, /flashcards/:id/review e /review/due
+app.use('/tasks', taskRoutes);
 
 // 6. Tratamento de rotas não encontradas (404)
 app.use((req, res) => {
