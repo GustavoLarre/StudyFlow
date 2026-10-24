@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 # Se OLLAMA_URL não estiver definido, usa o localhost por padrão para desenvolvimento local
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b") # Ou "qwen2.5:1.5b" dependendo do modelo que baixouODEL", "qwen")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 # 1. Modelo Pydantic para um único flashcard
 class FlashcardSchema(BaseModel):
@@ -48,7 +48,11 @@ Conteúdo: {content}
         "model": OLLAMA_MODEL,
         "prompt": prompt,
         "stream": False,
-        "format": "json" # Força o Ollama a retornar um JSON estruturado
+        "format": "json",
+        "options": {
+            "temperature": 0.1, # <-- Temperatura baixa (0.1) para máxima fidelidade
+            "context": []  # <-- Força explicitamente o reset de qualquer contexto anterior
+        }
     }
 
     try:
