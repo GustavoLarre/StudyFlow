@@ -27,7 +27,7 @@ export async function createNoteForSubject({ subjectId, title, content }) {
 }
 
 /**
- * Gera flashcards baseados no conteúdo de uma nota utilizando IA
+ * Gera flashcards baseados no conteúdo de uma nota existente utilizando IA
  */
 export async function generateFlashcardsForNote(subjectId, noteInput) {
   if (!noteInput || !noteInput.content) {
@@ -38,22 +38,15 @@ export async function generateFlashcardsForNote(subjectId, noteInput) {
     throw new Error(`A nota ultrapassou o limite máximo de ${MAX_NOTE_CHARS} caracteres.`);
   }
 
-  // 1. Salva a nota no Firestore usando o repositório real
-  const noteDataToSave = {
-    subjectId,
-    title: noteInput.title || 'Nota sem título',
-    content: noteInput.content,
-    createdAt: new Date().toISOString()
-  };
+  // Como a nota já existe no banco (passada por noteInput), usamos o noteId dela diretamente
+  const targetNoteId = noteInput.noteId;
 
-  const savedNote = await createNoteDb(noteDataToSave);
+  // 1. Chama a IA para gerar os flashcards passando o título e o conteúdo
+  const generatedCardsRaw = await generateFlashcardsFromText(noteInput.title, noteInput.content);
 
-  // 2. Chama a IA para gerar os flashcards passando o título e o conteúdo
-  const generatedCardsRaw = await generateFlashcardsFromText(savedNote.title, savedNote.content);
-
-  // 3. Prepara os flashcards com o ID da nota recém-criada
+  // 2. Prepara os flashcards amarrados corretamente ao noteId real e ao subjectId
   const flashcardsToInsert = generatedCardsRaw.map(card => ({
-    noteId: savedNote.noteId,
+    noteId: targetNoteId,
     subjectId,
     front: card.front,
     back: card.back,
@@ -63,11 +56,11 @@ export async function generateFlashcardsForNote(subjectId, noteInput) {
     dueDate: new Date().toISOString()
   }));
 
-  // 4. Salva os flashcards em lote no Firestore
+  // 3. Salva os flashcards em lote no Firestore
   const savedFlashcards = await createManyFlashcardsDb(flashcardsToInsert);
 
   return {
-    ...savedNote,
+    ...noteInput,
     flashcards: savedFlashcards
   };
 }

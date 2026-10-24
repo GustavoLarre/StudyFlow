@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import * as notesController from '../controllers/notesController.js';
 import { generateFlashcardsForNote } from '../services/notesService.js';
-// Importe a função que busca a nota no repositório do banco (ajuste o caminho se necessário)
 import { getNoteByIdDb } from '../repositories/noteRepository.js'; 
 
 const router = Router();
@@ -28,8 +27,8 @@ router.post('/notes/:noteId/generate-flashcards', async (req, res) => {
       });
     }
 
-    // Passa a nota real encontrada para o serviço gerar os flashcards
-    const result = await generateFlashcardsForNote(noteId, noteFromDb);
+    // Passa o subjectId real da nota e o objeto dela para o serviço
+    const result = await generateFlashcardsForNote(noteFromDb.subjectId, noteFromDb);
 
     return res.status(201).json({
       success: true,
