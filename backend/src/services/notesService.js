@@ -23,8 +23,8 @@ export async function generateFlashcardsForNote(subjectId, noteInput) {
 
   const savedNote = await createNoteDb(noteDataToSave);
 
-  // 2. Chama a IA para gerar os flashcards baseados no conteúdo
-  const generatedCardsRaw = await generateFlashcardsFromText(savedNote.content);
+  // 2. Chama a IA para gerar os flashcards passando o título e o conteúdo
+const generatedCardsRaw = await generateFlashcardsFromText(savedNote.title, savedNote.content);
 
   // 3. Prepara os flashcards com o ID da nota recém-criada
   const flashcardsToInsert = generatedCardsRaw.map(card => ({

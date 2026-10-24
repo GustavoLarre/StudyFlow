@@ -5,9 +5,9 @@ from typing import List
 from pydantic import BaseModel, Field, ValidationError
 from fastapi import HTTPException
 
-# URL do Ollama configurada via variável de ambiente ou padrão do Docker Compose
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen")
+# Se OLLAMA_URL não estiver definido, usa o localhost por padrão para desenvolvimento local
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b") # Ou "qwen2.5:1.5b" dependendo do modelo que baixouODEL", "qwen")
 
 # 1. Modelo Pydantic para um único flashcard
 class FlashcardSchema(BaseModel):

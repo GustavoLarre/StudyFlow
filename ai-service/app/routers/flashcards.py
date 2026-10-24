@@ -8,14 +8,14 @@ class NoteInput(BaseModel):
     title: str
     content: str
 
+from fastapi import APIRouter, HTTPException
+
 @router.post("/generate-flashcards")
-def generate_flashcards(note: NoteInput):
+async def generate_flashcards(note: NoteInput):
     try:
         flashcards = generate_flashcards_with_ai(note.title, note.content)
-        return flashcards
+        return {"flashcards": flashcards}
+    except HTTPException as he:
+        raise he  # Propaga o erro HTTP gerado pelo serviço
     except Exception as e:
-        # Tratamento resiliente: se a IA falhar, retornamos 503 com detalhes do erro
-        raise HTTPException(
-            status_code=503, 
-            detail=f"Falha ao comunicar com o serviço de IA: {str(e)}"
-        )
+        raise HTTPException(status_code=503, detail=str(e))

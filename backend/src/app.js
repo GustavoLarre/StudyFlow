@@ -35,4 +35,12 @@ app.use((req, res) => {
   return res.status(404).json({ success: false, error: 'Rota não encontrada.' });
 });
 
+// === ADICIONE ESTE BLOCO ABAIXO ===
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 StudyFlow Backend rodando na porta ${PORT}`);
+});
+// ===================================
+
 export default app;

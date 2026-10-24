@@ -1,26 +1,19 @@
+import pytest
 from unittest.mock import patch
-from fastapi.testclient import TestClient
-from app.main import app
+import requests
+from fastapi import HTTPException
+from app.services.ai_service import generate_flashcards_with_ai
 
-client = TestClient(app)
-
-@patch("app.routers.flashcards.generate_flashcards_with_ai")
-def test_generate_flashcards_ai_failure(mock_ai_service):
-    """Garante que a API lida graciosamente com falhas na IA (ex: Ollama fora do ar)."""
+@patch("app.services.ai_service.requests.post")
+def test_ai_service_ollama_down(mock_requests_post):
+    """Garante que o serviço de IA dispara HTTPException 503 quando o Ollama está inacessível."""
     
-    # 1. Configuramos o mock para lançar uma exceção simulando erro no serviço de IA
-    mock_ai_service.side_effect = Exception("Ollama connection failed")
+    # Simula uma falha de conexão de rede (Ollama fora do ar / container desligado)
+    mock_requests_post.side_effect = requests.exceptions.RequestException("Connection refused")
 
-    # 2. Enviamos uma requisição válida
-    response = client.post(
-        "/generate-flashcards",
-        json={
-            "title": "Redes de Computadores",
-            "content": "O protocolo HTTP opera na camada de aplicação."
-        }
-    )
+    # Garante que a função dispara o erro HTTP 503 tratado corretamente pela arquitetura
+    with pytest.raises(HTTPException) as exc_info:
+        generate_flashcards_with_ai("Redes", "Conteúdo de teste")
 
-    # 3. Validamos que a aplicação trata o erro adequadamente (ex: Status 503 ou 500 tratada)
-    assert response.status_code in [500, 503]
-    data = response.json()
-    assert "detail" in data
+    assert exc_info.value.status_code == 503
+    assert "Ollama" in exc_info.value.detail or "conexão" in exc_info.value.detail.lower()

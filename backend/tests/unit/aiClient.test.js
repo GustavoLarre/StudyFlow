@@ -1,14 +1,23 @@
+import { jest } from '@jest/globals';
 import { generateFlashcardsFromText } from '../../src/services/aiClient.js';
+import fetch from 'node-fetch';
 
-describe('AI Client Service (Abstração da IA)', () => {
-  it('Deve retornar uma lista de flashcards estruturados a partir de um texto de nota', async () => {
-    const mockNoteContent = 'O ciclo TDD consiste em Red, Green e Refactor.';
-    
-    const flashcards = await generateFlashcardsFromText(mockNoteContent);
+jest.mock('node-fetch');
 
-    expect(Array.isArray(flashcards)).toBe(true);
-    expect(flashcards.length).toBeGreaterThan(0);
-    expect(flashcards[0]).toHaveProperty('front');
-    expect(flashcards[0]).toHaveProperty('back');
+describe('AI Client Service - Integração com ai-service', () => {
+  it('Deve enviar o texto para o ai-service e retornar os flashcards parseados', async () => {
+    const mockCards = [
+      { front: 'O que é BSS?', back: 'Segmento de dados não inicializados em C.' }
+    ];
+
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ flashcards: mockCards })
+    });
+
+    const result = await generateFlashcardsFromText('Texto da nota sobre memória C');
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(mockCards);
   });
 });
