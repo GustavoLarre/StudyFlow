@@ -44,8 +44,17 @@ export async function generateFlashcardsForNote(subjectId, noteInput) {
   // 1. Chama a IA para gerar os flashcards passando o título e o conteúdo
   const generatedCardsRaw = await generateFlashcardsFromText(noteInput.title, noteInput.content);
 
+  // Blindagem defensiva: se vier undefined ou não for array, tratamos como lista vazia
+  const cardsList = Array.isArray(generatedCardsRaw) 
+    ? generatedCardsRaw 
+    : (generatedCardsRaw?.flashcards || []);
+
+  if (cardsList.length === 0) {
+    throw new Error('A IA não retornou nenhum flashcard válido.');
+  }
+
   // 2. Prepara os flashcards amarrados corretamente ao noteId real e ao subjectId
-  const flashcardsToInsert = generatedCardsRaw.map(card => ({
+  const flashcardsToInsert = cardsList.map(card => ({
     noteId: targetNoteId,
     subjectId,
     front: card.front,

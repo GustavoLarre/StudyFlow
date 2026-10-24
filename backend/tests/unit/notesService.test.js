@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals';
 
-// Define os mocks antes de importar o service
 jest.unstable_mockModule('../../src/repositories/noteRepository.js', () => ({
   createNoteDb: jest.fn()
 }));
@@ -13,46 +12,41 @@ jest.unstable_mockModule('../../src/services/aiClient.js', () => ({
   generateFlashcardsFromText: jest.fn()
 }));
 
-// Importações dinâmicas após os mocks no ESM
-const noteRepository = await import('../../src/repositories/noteRepository.js');
-const flashcardRepository = await import('../../src/repositories/flashcardRepository.js');
-const aiClient = await import('../../src/services/aiClient.js');
-const { generateFlashcardsForNote } = await import('../../src/services/notesService.js');
+import { generateFlashcardsForNote } from '../../src/services/notesService.js';
+import { createManyFlashcardsDb } from '../../src/repositories/flashcardRepository.js';
+import { generateFlashcardsFromText } from '../../src/services/aiClient.js';
 
 describe('Notes Service - Geração e Persistência de Flashcards', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('Deve salvar a nota no Firestore, gerar flashcards via IA e salvá-los no repositório', async () => {
-    const mockSubjectId = 'sub_123';
-    const mockNoteData = {
-      title: 'Arquitetura de Computadores',
-      content: 'Pipeline de execução e hierarquia de memória.'
+  it('Deve gerar flashcards via IA para uma nota existente e salvá-los no repositório', async () => {
+    const mockSubjectId = '1';
+    const mockNoteInput = {
+      noteId: 'note-123',
+      subjectId: '1',
+      title: 'Nota de Teste',
+      content: 'Conteúdo de teste para IA.',
+      createdAt: new Date().toISOString()
     };
 
-    noteRepository.createNoteDb.mockResolvedValueOnce({
-      noteId: 'note_abc_123',
-      subjectId: mockSubjectId,
-      ...mockNoteData
-    });
+    const mockGeneratedCards = [
+      { front: 'Pergunta 1?', back: 'Resposta 1' }
+    ];
 
-    aiClient.generateFlashcardsFromText.mockResolvedValueOnce([
-      { front: 'O que é pipeline?', back: 'Técnica de sobreposição de instruções.' }
-    ]);
+    const mockSavedCards = [
+      { flashcardId: 'card-1', noteId: 'note-123', subjectId: '1', ...mockGeneratedCards[0] }
+    ];
 
-    flashcardRepository.createManyFlashcardsDb.mockResolvedValueOnce([
-      { flashcardId: 'card_1', noteId: 'note_abc_123', front: 'O que é pipeline?', back: 'Técnica de sobreposição de instruções.' }
-    ]);
+    generateFlashcardsFromText.mockResolvedValue(mockGeneratedCards);
+    createManyFlashcardsDb.mockResolvedValue(mockSavedCards);
 
-    const result = await generateFlashcardsForNote(mockSubjectId, mockNoteData);
+    const result = await generateFlashcardsForNote(mockSubjectId, mockNoteInput);
 
-    expect(noteRepository.createNoteDb).toHaveBeenCalledTimes(1);
-    expect(aiClient.generateFlashcardsFromText).toHaveBeenCalledTimes(1);
-    expect(flashcardRepository.createManyFlashcardsDb).toHaveBeenCalledTimes(1);
-    
-    expect(result).toHaveProperty('noteId', 'note_abc_123');
+    expect(generateFlashcardsFromText).toHaveBeenCalledTimes(1);
+    expect(createManyFlashcardsDb).toHaveBeenCalledTimes(1);
     expect(result).toHaveProperty('flashcards');
-    expect(result.flashcards.length).toBe(1);
+    expect(result.flashcards).toEqual(mockSavedCards);
   });
 });
