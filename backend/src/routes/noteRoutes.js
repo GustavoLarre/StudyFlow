@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import * as notesController from '../controllers/notesController.js';
 import { generateFlashcardsForNote } from '../services/notesService.js';
+// Importe a função que busca a nota no repositório do banco (ajuste o caminho se necessário)
+import { getNoteByIdDb } from '../repositories/noteRepository.js'; 
 
 const router = Router();
 
@@ -16,18 +18,22 @@ router.post('/notes/:noteId/generate-flashcards', async (req, res) => {
   try {
     const { noteId } = req.params;
 
-    // Nota simulada/mockada por enquanto antes de ligar o Firestore real.
-    const mockFetchedNote = {
-      title: 'Nota de Estudo',
-      content: 'Conteúdo da nota recuperado do banco de dados.'
-    };
+    // Busca a nota real no banco de dados usando o noteId da URL
+    const noteFromDb = await getNoteByIdDb(noteId);
 
-    const flashcards = await generateFlashcardsForNote(noteId, mockFetchedNote);
+    if (!noteFromDb) {
+      return res.status(404).json({
+        success: false,
+        error: 'Nota não encontrada no banco de dados.'
+      });
+    }
+
+    // Passa a nota real encontrada para o serviço gerar os flashcards
+    const result = await generateFlashcardsForNote(noteId, noteFromDb);
 
     return res.status(201).json({
       success: true,
-      count: flashcards.length,
-      flashcards
+      flashcards: result
     });
   } catch (error) {
     return res.status(400).json({
