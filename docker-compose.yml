@@ -9,10 +9,28 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama_data:/root/.ollama  # <-- Garante que os modelos não sumam ao reiniciar
+      - ollama_data:/root/.ollama
     networks:
       - studyflow-net
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     restart: unless-stopped
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: studyflow-ollama-pull
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["ollama", "pull", "qwen2.5:1.5b"]
+    networks:
+      - studyflow-net
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
 
   ai-service:
     build: ./ai-service
@@ -20,7 +38,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_URL=http://ollama:11434/api/generate
       - OLLAMA_MODEL=qwen2.5:1.5b
     volumes:
       - ./ai-service:/app
@@ -28,8 +46,9 @@ services:
     networks:
       - studyflow-net
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  ollama_data:  # <-- Declaração do volume persistente
+  ollama_data:
