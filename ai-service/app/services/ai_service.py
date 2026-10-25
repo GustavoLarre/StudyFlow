@@ -8,15 +8,17 @@ from fastapi import HTTPException
 # Se OLLAMA_URL não estiver definido, usa o localhost por padrão para desenvolvimento local
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "120"))
 
-# 1. Modelo Pydantic para um único flashcard
+
 class FlashcardSchema(BaseModel):
     front: str = Field(..., description="A pergunta ou conceito na frente do flashcard")
     back: str = Field(..., description="A resposta ou explicação no verso do flashcard")
 
-# 2. Modelo Pydantic para a resposta completa da IA (Refinamento de Saída)
+
 class FlashcardResponse(BaseModel):
     flashcards: List[FlashcardSchema] = Field(..., description="Lista de flashcards gerados pela IA")
+
 
 def generate_flashcards_with_ai(title: str, content: str) -> List[dict]:
     prompt = f"""
@@ -43,38 +45,49 @@ Agora, com base no título e no conteúdo abaixo, crie flashcards seguindo rigor
 Título: {title}
 Conteúdo: {content}
 """
-    
+
     payload = {
         "model": OLLAMA_MODEL,
         "prompt": prompt,
         "stream": False,
         "format": "json",
         "options": {
-            "temperature": 0.1, # <-- Temperatura baixa (0.1) para máxima fidelidade
-            "context": []  # <-- Força explicitamente o reset de qualquer contexto anterior
-        }
+            "temperature": 0.1  # baixa temperatura para máxima fidelidade ao texto
+        },
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=OLLAMA_TIMEOUT)
         response.raise_for_status()
-        
+
         data = response.json()
         raw_text = data.get("response", "{}")
 
-        # Garante que o texto retornado pela LLM seja parseado como JSON
         parsed_data = json.loads(raw_text)
 
-        # Se a LLM retornar uma lista direta em vez do objeto com a chave "flashcards", adaptamos para manter compatibilidade
+        # Se a LLM retornar uma lista direta, adaptamos para o formato esperado
         if isinstance(parsed_data, list):
             parsed_data = {"flashcards": parsed_data}
 
-        # Validação estrita de ponta a ponta com o Pydantic (FlashcardResponse)
-        validated_response = FlashcardResponse(**parsed_data)
+        validated_response = FlashcardResponse.model_validate(parsed_data)
 
-        # Retorna a lista de dicionários já validada e limpa
+        if not validated_response.flashcards:
+            raise HTTPException(
+                status_code=500,
+                detail="A IA não gerou nenhum flashcard para este conteúdo.",
+            )
+
         return [card.model_dump() for card in validated_response.flashcards]
 
+    except HTTPException:
+        raise
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 404:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Modelo '{OLLAMA_MODEL}' não encontrado no Ollama. Rode: ollama pull {OLLAMA_MODEL}",
+            )
+        raise HTTPException(status_code=503, detail=f"Erro de comunicação com o Ollama: {str(e)}")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=503, detail=f"Erro de comunicação com o Ollama: {str(e)}")
     except (json.JSONDecodeError, ValidationError, ValueError) as e:
