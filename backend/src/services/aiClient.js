@@ -1,10 +1,10 @@
-import defaultFetch from 'node-fetch';
-
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:8001';
 
-// Permitimos injetar um customFetch (ótimo para testes unitários), 
-// caindo para o node-fetch padrão em produção.
-export async function generateFlashcardsFromText(title, content, customFetch = defaultFetch) {
+export async function generateFlashcardsFromText(
+  title,
+  content,
+  customFetch = (...args) => globalThis.fetch(...args)
+) {
   try {
     const response = await customFetch(`${AI_SERVICE_URL}/generate-flashcards`, {
       method: 'POST',

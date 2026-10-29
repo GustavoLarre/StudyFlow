@@ -27,4 +27,22 @@ describe('AI Client Service - Integração com ai-service', () => {
       generateFlashcardsFromText('Título', 'Conteúdo', mockFetch)
     ).rejects.toThrow('Não foi possível gerar os flashcards via IA no momento. Tente novamente mais tarde.');
   });
+
+  // NOVO (Red do item 0.2)
+  it('Deve usar o fetch global do Node por padrão (sem node-fetch)', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ flashcards: [{ front: 'P?', back: 'R.' }] })
+    });
+
+    try {
+      const result = await generateFlashcardsFromText('Título', 'Conteúdo');
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([{ front: 'P?', back: 'R.' }]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
