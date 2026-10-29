@@ -1,11 +1,25 @@
-export default {
+const base = {
   testEnvironment: 'node',
   transform: {},
   moduleFileExtensions: ['js', 'json'],
-  testMatch: ['<rootDir>/tests/**/*.test.js'], // <- Adicionamos o <rootDir> aqui
-  verbose: true,
-  forceExit: true,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+};
+
+export default {
+  verbose: true,
+  forceExit: true,
+  projects: [
+    {
+      ...base,
+      displayName: 'unit',
+      testMatch: ['<rootDir>/tests/unit/**/*.test.js'],
+    },
+    {
+      ...base,
+      displayName: 'integration',
+      testMatch: ['<rootDir>/tests/integration/**/*.test.js'],
+    },
+  ],
 };

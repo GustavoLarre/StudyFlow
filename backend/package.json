@@ -5,10 +5,12 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
-  },
+  "start": "node src/server.js",
+  "dev": "node --watch src/server.js",
+  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+  "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects unit",
+  "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects integration"
+},
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
