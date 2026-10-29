@@ -13,9 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o restante dos arquivos da pasta para o container
 COPY . .
 
-# Expõe a porta onde o serviço vai rodar
-EXPOSE 8000
-
 # Comando padrão para iniciar o servidor
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
