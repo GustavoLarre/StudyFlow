@@ -20,6 +20,7 @@ export default {
       ...base,
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.js'],
+      setupFiles: ['<rootDir>/tests/setup/requireEmulator.js'],
     },
   ],
 };
