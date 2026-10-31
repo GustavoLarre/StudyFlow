@@ -4,13 +4,18 @@
   "description": "Backend do StudyFlow em Node.js com Express e Firebase",
   "main": "src/server.js",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-  "start": "node src/server.js",
-  "dev": "node --watch src/server.js",
-  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-  "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects unit",
-  "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects integration"
-},
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "npm run test:unit && npm run test:integration:emu",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects unit",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects integration",
+    "emulators": "firebase emulators:start --config ../firebase.json --only auth,firestore --project demo-studyflow",
+    "test:integration:emu": "firebase emulators:exec --config ../firebase.json --only auth,firestore --project demo-studyflow \"npm run test:integration\""
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
@@ -18,6 +23,7 @@
     "firebase-admin": "^14.5.0"
   },
   "devDependencies": {
+    "firebase-tools": "^15.34.2",
     "jest": "^30.5.2",
     "supertest": "^7.3.1"
   }
