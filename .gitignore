@@ -14,9 +14,16 @@ backend/build/
 # === Variáveis de Ambiente & Credenciais (Altamente Sensíveis) ===
 .env
 backend/.env
-*.env
+.env.*
+!.env.example
 serviceAccountKey.json
 firebase-adminsdk.json
+
+# Logs do emulator
+firestore-debug.log
+ui-debug.log
+firebase-debug.log
+*-debug.log
 
 # === Sistema / IDE ===
 .DS_Store
