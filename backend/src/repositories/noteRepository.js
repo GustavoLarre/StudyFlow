@@ -28,3 +28,17 @@ export async function getNoteByIdDb(noteId) {
 
   return { noteId: docSnap.id, ...docSnap.data() };
 }
+
+export async function updateNoteDb(noteId, updateData) {
+  const docRef = db.collection(COLLECTION_NAME).doc(noteId);
+
+  // update() falha se o documento não existir
+  await docRef.update(updateData);
+
+  const updatedSnap = await docRef.get();
+  return { noteId: updatedSnap.id, ...updatedSnap.data() };
+}
+
+export async function deleteNoteDb(noteId) {
+  await db.collection(COLLECTION_NAME).doc(noteId).delete();
+}

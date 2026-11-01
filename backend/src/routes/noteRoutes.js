@@ -8,6 +8,9 @@ const router = Router();
 // 1. Rotas de Notas por Matéria (Fase 1)
 router.post('/subjects/:subjectId/notes', notesController.createNote);
 router.get('/subjects/:subjectId/notes', notesController.listNotes);
+router.get('/notes/:id', notesController.getNote);
+router.put('/notes/:id', notesController.updateNote);
+router.delete('/notes/:id', notesController.deleteNote);
 
 /**
  * 2. Rota de Geração de Flashcards via IA (Fase 2)
