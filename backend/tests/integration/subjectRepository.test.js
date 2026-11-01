@@ -1,7 +1,12 @@
 import { createSubjectDb, getSubjectsDb, getSubjectByIdDb } from '../../src/repositories/subjectRepository.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Repositório de Matérias - Firestore', () => {
   let createdSubjectId;
+
+  beforeAll(async () => {
+    await clearAll();
+  });
 
   it('Deve criar uma matéria no Firestore com sucesso', async () => {
     const subjectData = {
@@ -18,17 +23,17 @@ describe('Repositório de Matérias - Firestore', () => {
     createdSubjectId = result.subjectId;
   });
 
-  it('Deve listar todas as matérias cadastradas', async () => {
+    it('Deve listar todas as matérias cadastradas', async () => {
     const subjects = await getSubjectsDb();
 
     expect(Array.isArray(subjects)).toBe(true);
-    expect(subjects.length).toBeGreaterThan(0);
-    
+    expect(subjects).toHaveLength(1); // só a matéria criada neste arquivo
+
     const found = subjects.find(s => s.subjectId === createdSubjectId);
     expect(found).toBeDefined();
     expect(found.name).toBe('Matemática Discreta');
   });
-
+  
   it('Deve buscar uma matéria específica pelo ID', async () => {
     const subject = await getSubjectByIdDb(createdSubjectId);
 
