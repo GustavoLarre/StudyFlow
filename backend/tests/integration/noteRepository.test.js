@@ -1,8 +1,14 @@
 import { createNoteDb, getNotesBySubjectDb, getNoteByIdDb } from '../../src/repositories/noteRepository.js';
+import { db } from '../../src/config/firebase.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Repositório de Notas - Firestore', () => {
   const mockSubjectId = `sub_test_${Date.now()}`;
   let createdNoteId;
+
+  beforeAll(async () => {
+    await clearAll();
+  });
 
   it('Deve criar uma nota no Firestore com sucesso', async () => {
     const noteData = {
@@ -25,9 +31,8 @@ describe('Repositório de Notas - Firestore', () => {
     const notes = await getNotesBySubjectDb(mockSubjectId);
 
     expect(Array.isArray(notes)).toBe(true);
-    expect(notes.length).toBeGreaterThan(0);
-    
-    // Encontra especificamente a nota criada neste escopo de teste
+    expect(notes).toHaveLength(1);
+
     const foundNote = notes.find(n => n.noteId === createdNoteId);
     expect(foundNote).toBeDefined();
     expect(foundNote.subjectId).toBe(mockSubjectId);
@@ -44,5 +49,12 @@ describe('Repositório de Notas - Firestore', () => {
   it('Deve retornar null ao buscar uma nota com ID inexistente', async () => {
     const note = await getNoteByIdDb('id_que_nao_existe');
     expect(note).toBeNull();
+  });
+
+  // NOVO: prova que o banco estava limpo (Red por repetição)
+  it('Deve ter apenas as notas criadas neste arquivo de teste', async () => {
+    const snapshot = await db.collection('notes').get();
+
+    expect(snapshot.size).toBe(1);
   });
 });
