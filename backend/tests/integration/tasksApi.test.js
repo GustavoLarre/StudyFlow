@@ -1,8 +1,13 @@
 import request from 'supertest';
 import app from '../../src/app.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Integração - Módulo de Tarefas (/tasks)', () => {
   let createdTaskId;
+
+  beforeAll(async () => {
+    await clearAll();
+  });
 
   it('Deve criar uma tarefa com sucesso via POST /tasks', async () => {
     const response = await request(app)
@@ -24,6 +29,8 @@ describe('Integração - Módulo de Tarefas (/tasks)', () => {
 
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body).toHaveLength(1); // só a tarefa criada neste arquivo
+
     const found = response.body.find(t => t.taskId === createdTaskId);
     expect(found).toBeDefined();
   });
