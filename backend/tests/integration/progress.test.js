@@ -1,8 +1,15 @@
 import { getSubjectProgressDb } from '../../src/repositories/progressRepository.js';
 import { createSubjectDb } from '../../src/repositories/subjectRepository.js';
 import { createFlashcardDb, updateFlashcardDb } from '../../src/repositories/flashcardRepository.js';
+import { db } from '../../src/config/firebase.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Módulo de Progresso e Estatísticas - Firestore', () => {
+
+  beforeAll(async () => {
+    await clearAll();
+  });
+
   it('Deve agregar corretamente as estatísticas de dificuldade dos flashcards por matéria', async () => {
     // 1. Cria uma matéria de teste
     const subject = await createSubjectDb({ name: 'Arquitetura de Computadores' });
@@ -45,5 +52,13 @@ describe('Módulo de Progresso e Estatísticas - Firestore', () => {
       medio: 0,
       dificil: 1
     });
+  });
+
+  it('Deve ter apenas os dados criados neste arquivo de teste', async () => {
+    const subjects = await db.collection('subjects').get();
+    const flashcards = await db.collection('flashcards').get();
+
+    expect(subjects.size).toBe(1);
+    expect(flashcards.size).toBe(3);
   });
 });
