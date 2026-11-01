@@ -1,6 +1,13 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
-// Mockamos apenas o subjectService
+// Autenticação fora do escopo deste teste: injeta um usuário fixo
+jest.unstable_mockModule('../../src/middlewares/firebaseAuth.js', () => ({
+  authenticate: (req, res, next) => {
+    req.user = { uid: 'user_teste', plan: 'free', xp: 0, level: 1 };
+    next();
+  }
+}));
+
 jest.unstable_mockModule('../../src/services/subjectService.js', () => ({
   createSubject: jest.fn(),
   getAllSubjects: jest.fn()
