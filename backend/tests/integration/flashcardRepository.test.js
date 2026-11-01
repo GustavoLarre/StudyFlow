@@ -5,10 +5,15 @@ import {
   updateFlashcardDb, 
   getDueFlashcardsDb 
 } from '../../src/repositories/flashcardRepository.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Repositório de Flashcards - Firestore (SM-2 & Gestão)', () => {
   const mockNoteId = `note_test_${Date.now()}`;
   let createdFlashcardId;
+
+  beforeAll(async () => {
+    await clearAll();
+  });
 
   it('Deve criar um flashcard manual no Firestore com sucesso', async () => {
     const flashcardData = {
@@ -77,12 +82,11 @@ describe('Repositório de Flashcards - Firestore (SM-2 & Gestão)', () => {
     };
 
     const inserted = await createFlashcardDb(overdueCardData);
-
     const nowIso = new Date().toISOString();
     const dueCards = await getDueFlashcardsDb(nowIso);
 
     expect(Array.isArray(dueCards)).toBe(true);
-    const found = dueCards.find(c => c.flashcardId === inserted.flashcardId);
-    expect(found).toBeDefined();
+    expect(dueCards).toHaveLength(1); // só o "Card Vencido" criado neste arquivo
+    expect(dueCards[0].flashcardId).toBe(inserted.flashcardId);
   });
 });
