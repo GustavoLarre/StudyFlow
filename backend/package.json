@@ -11,8 +11,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "npm run test:unit && npm run test:integration:emu",
-    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects unit",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects integration",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects unit --",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --selectProjects integration --",
+    "test:integration:local": "set -a && . ./.env.emulator && set +a && npm run test:integration --",
     "emulators": "firebase emulators:start --config ../firebase.json --only auth,firestore --project demo-studyflow",
     "test:integration:emu": "firebase emulators:exec --config ../firebase.json --only auth,firestore --project demo-studyflow \"npm run test:integration\""
   },
