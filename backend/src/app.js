@@ -7,6 +7,7 @@ import subjectRoutes from './routes/subjectRoutes.js';
 import noteRoutes from './routes/noteRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import meRoutes from './routes/meRoutes.js';
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.get('/health', (req, res) => {
     message: 'StudyFlow API is running smoothly! 🟢'
   });
 });
+
+app.use('/me', meRoutes);
 
 app.use('/subjects', subjectRoutes);
 app.use('/', noteRoutes);
