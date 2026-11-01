@@ -3,9 +3,14 @@ import {
   getTasksDb, 
   completeAndDeleteTaskDb 
 } from '../../src/repositories/taskRepository.js';
+import { clearAll } from '../helpers/emulator.js';
 
 describe('Repositório de Tarefas - Firestore (CRUD & Auto-Delete)', () => {
   let createdTaskId;
+
+  beforeAll(async () => {
+    await clearAll();
+  });
 
   it('Deve criar uma tarefa com sucesso no Firestore', async () => {
     const taskData = {
@@ -28,6 +33,8 @@ describe('Repositório de Tarefas - Firestore (CRUD & Auto-Delete)', () => {
     const tasks = await getTasksDb();
 
     expect(Array.isArray(tasks)).toBe(true);
+    expect(tasks).toHaveLength(1); // só a tarefa criada neste arquivo
+
     const found = tasks.find(t => t.taskId === createdTaskId);
     expect(found).toBeDefined();
     expect(found.completed).toBe(false);
