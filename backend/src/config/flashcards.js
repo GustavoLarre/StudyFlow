@@ -18,6 +18,9 @@ export const REVIEW_RATINGS = Object.freeze({
   easy: 4
 });
 
+// again=1, hard=2, good=3, easy=4 (muito fácil rende mais)
+export const REVIEW_XP = Object.freeze({ again: 1, hard: 2, good: 3, easy: 4 });
+
 export const INITIAL_RATING = 1;
 export const INITIAL_EASE_FACTOR = 2.5;
 

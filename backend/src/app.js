@@ -9,6 +9,7 @@ import noteRoutes from './routes/noteRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import meRoutes from './routes/meRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/me', meRoutes);
 app.use('/subjects', subjectRoutes);
 app.use('/', noteRoutes);
 app.use('/', flashcardRoutes);
+app.use('/', reviewRoutes);
 app.use('/tasks', taskRoutes);
 
 app.use((req, res) => {

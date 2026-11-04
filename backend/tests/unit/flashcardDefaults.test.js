@@ -4,6 +4,7 @@ import {
   CARD_STATES,
   INITIAL_RATING,
   REVIEW_RATINGS,
+  REVIEW_XP,
   INITIAL_EASE_FACTOR,
   buildNewFlashcard
 } from '../../src/config/flashcards.js';
@@ -24,6 +25,10 @@ describe('Unidade - Defaults de flashcard', () => {
 
   it('Deve mapear os botões de revisão para rating 1 a 4', () => {
     expect(REVIEW_RATINGS).toEqual({ again: 1, hard: 2, good: 3, easy: 4 });
+  });
+
+  it('Tabela de XP da revisão', () => {
+    expect(REVIEW_XP).toEqual({ again: 1, hard: 2, good: 3, easy: 4 });
   });
 
   it('Rating inicial deve ser 1 (difícil) e ease inicial 2.5', () => {
@@ -53,7 +58,6 @@ describe('Unidade - Defaults de flashcard', () => {
       });
 
       expect(card).not.toHaveProperty('repetition');
-      
     });
 
     it('Deve vencer imediatamente e registrar createdAt e updatedAt', () => {
