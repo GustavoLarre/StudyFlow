@@ -7,12 +7,23 @@ import {
 } from '../repositories/noteRepository.js';
 import { getSubjectByIdDb } from '../repositories/subjectRepository.js';
 import { createManyFlashcardsDb } from '../repositories/flashcardRepository.js';
+import {
+  getUserByUidDb,
+  updateUserDb,
+  reserveAiGeneration,
+  releaseAiGeneration
+} from '../repositories/userRepository.js';
 import { generateFlashcardsFromText } from './aiClient.js';
+import { addXp } from './gamificationService.js';
+import { buildNewFlashcard, FLASHCARD_SOURCES } from '../config/flashcards.js';
+import { getPlanLimits } from '../config/plans.js';
 import { ValidationError, NotFoundError } from '../errors/AppError.js';
 
 export const MAX_NOTE_CHARS = 6000;
 const MAX_TITLE_LENGTH = 150;
 const DEFAULT_TITLE = 'Nota sem título';
+const AI_LOCK_MS = (Number(process.env.AI_SERVICE_TIMEOUT_MS) || 120000) + 15000;
+const XP_PER_CREATED_CARD = 1;
 
 function normalizeContent(content) {
   if (typeof content !== 'string' || content.trim() === '') {
@@ -58,6 +69,18 @@ async function getOwnedNote(userId, noteId) {
   }
 
   return note;
+}
+
+async function grantXp(userId, amount) {
+  try {
+    const user = await getUserByUidDb(userId);
+    const updated = addXp(user, amount);
+    await updateUserDb(userId, { xp: updated.xp, level: updated.level });
+    return { gainedXp: amount, totalXp: updated.xp, level: updated.level };
+  } catch (error) {
+    console.error('Falha ao gravar XP:', error.message);
+    return null;
+  }
 }
 
 export async function createNote({ userId, subjectId, title, content }) {
@@ -111,46 +134,39 @@ export async function deleteNote({ userId, noteId }) {
   await deleteNoteDb(noteId);
 }
 
-/**
- * Comportamento atual da geração por IA. Será refeito na Fase 6
- * (userId, cota, source: 'ai', rating inicial e nota intocada).
- */
-export async function generateFlashcardsForNote(subjectId, noteInput) {
-  if (!noteInput || !noteInput.content) {
-    throw new Error('Conteúdo da nota é obrigatório.');
+export async function generateFlashcardsForNote({ userId, noteId }) {
+  const note = await getOwnedNote(userId, noteId);
+
+  const user = await getUserByUidDb(userId);
+  const { limit } = getPlanLimits(user?.plan).aiGenerations;
+
+  // 403 (limite do plano) ou 409 (já há uma geração em andamento)
+  const usage = await reserveAiGeneration(userId, { limit, lockMs: AI_LOCK_MS });
+
+  let saved;
+  try {
+    // A nota é só fonte: somente título e conteúdo saem daqui
+    const generated = await generateFlashcardsFromText(note.title, note.content);
+
+    saved = await createManyFlashcardsDb(
+      generated.map((card) =>
+        buildNewFlashcard({
+          userId,
+          subjectId: note.subjectId,
+          noteId: note.noteId,
+          source: FLASHCARD_SOURCES.AI,
+          front: card.front,
+          back: card.back
+        })
+      )
+    );
+  } catch (error) {
+    await releaseAiGeneration(userId, { refund: true });
+    throw error;
   }
 
-  if (noteInput.content.length > MAX_NOTE_CHARS) {
-    throw new Error(`A nota ultrapassou o limite máximo de ${MAX_NOTE_CHARS} caracteres.`);
-  }
+  await releaseAiGeneration(userId, { refund: false });
+  const gamification = await grantXp(userId, saved.length * XP_PER_CREATED_CARD);
 
-  const targetNoteId = noteInput.noteId;
-
-  const generatedCardsRaw = await generateFlashcardsFromText(noteInput.title, noteInput.content);
-
-  const cardsList = Array.isArray(generatedCardsRaw)
-    ? generatedCardsRaw
-    : (generatedCardsRaw?.flashcards || []);
-
-  if (cardsList.length === 0) {
-    throw new Error('A IA não retornou nenhum flashcard válido.');
-  }
-
-  const flashcardsToInsert = cardsList.map(card => ({
-    noteId: targetNoteId,
-    subjectId,
-    front: card.front,
-    back: card.back,
-    interval: 0,
-    repetition: 0,
-    easeFactor: 2.5,
-    dueDate: new Date().toISOString()
-  }));
-
-  const savedFlashcards = await createManyFlashcardsDb(flashcardsToInsert);
-
-  return {
-    ...noteInput,
-    flashcards: savedFlashcards
-  };
+  return { flashcards: saved, gamification, usage };
 }

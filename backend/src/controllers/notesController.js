@@ -64,3 +64,15 @@ export async function deleteNote(req, res) {
     return handleError(res, error);
   }
 }
+
+export async function generateFlashcards(req, res) {
+  try {
+    const { flashcards, gamification, usage } = await notesService.generateFlashcardsForNote({
+      userId: req.user.uid,
+      noteId: req.params.id
+    });
+    return res.status(201).json({ success: true, flashcards, gamification, usage });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}

@@ -19,7 +19,8 @@ jest.unstable_mockModule('../../src/services/notesService.js', () => ({
 const request = (await import('supertest')).default;
 const app = (await import('../../src/app.js')).default;
 const notesService = await import('../../src/services/notesService.js');
-const { ValidationError, NotFoundError } = await import('../../src/errors/AppError.js');
+const errors = await import('../../src/errors/AppError.js');
+const { ValidationError, NotFoundError } = errors;
 
 describe('Integração - Notas (/subjects/:subjectId/notes e /notes/:id)', () => {
   beforeEach(() => {
@@ -98,5 +99,41 @@ describe('Integração - Notas (/subjects/:subjectId/notes e /notes/:id)', () =>
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ success: true });
     expect(notesService.deleteNote).toHaveBeenCalledWith({ userId: 'user_teste', noteId: 'n1' });
+  });
+
+  // NOVOS (6.5.5)
+  it('POST /notes/:id/generate-flashcards responde 201 com flashcards, gamification e usage', async () => {
+    notesService.generateFlashcardsForNote.mockResolvedValue({
+      flashcards: [{ flashcardId: 'c1' }],
+      gamification: { gainedXp: 1, totalXp: 1, level: 1 },
+      usage: { count: 1, limit: 3 }
+    });
+
+    const response = await request(app).post('/notes/n1/generate-flashcards').send();
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      success: true,
+      flashcards: [{ flashcardId: 'c1' }],
+      usage: { count: 1, limit: 3 }
+    });
+    expect(notesService.generateFlashcardsForNote).toHaveBeenCalledWith({
+      userId: 'user_teste', noteId: 'n1'
+    });
+  });
+
+  it.each([
+    ['NotFoundError', 404, undefined],
+    ['PlanLimitError', 403, 'PLAN_LIMIT_REACHED'],
+    ['ConflictError', 409, 'AI_GENERATION_IN_PROGRESS'],
+    ['BadGatewayError', 502, 'AI_SERVICE_UNAVAILABLE'],
+    ['GatewayTimeoutError', 504, 'AI_SERVICE_TIMEOUT']
+  ])('Geração: %s vira %i', async (name, status, code) => {
+    notesService.generateFlashcardsForNote.mockRejectedValue(new errors[name]());
+
+    const response = await request(app).post('/notes/n1/generate-flashcards').send();
+
+    expect(response.status).toBe(status);
+    expect(response.body.code).toBe(code);
   });
 });

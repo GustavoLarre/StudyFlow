@@ -3,13 +3,10 @@ import * as flashcardController from '../controllers/flashcardController.js';
 
 const router = Router();
 
-// Rota para buscar flashcards vencidos para revisão do dia
-router.get('/review/due', flashcardController.getDue);
-
-// Rota para criar flashcard manual vinculado a uma nota
-router.post('/notes/:noteId/flashcards', flashcardController.createManual);
-
-// Rota para registrar a revisão de um flashcard
-router.post('/flashcards/:flashcardId/review', flashcardController.review);
+router.post('/subjects/:subjectId/flashcards', flashcardController.create);
+router.get('/subjects/:subjectId/flashcards', flashcardController.list);
+router.get('/flashcards/:id', flashcardController.get);
+router.put('/flashcards/:id', flashcardController.update);
+router.delete('/flashcards/:id', flashcardController.remove);
 
 export default router;

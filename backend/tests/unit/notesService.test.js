@@ -16,12 +16,20 @@ jest.unstable_mockModule('../../src/repositories/flashcardRepository.js', () => 
   createManyFlashcardsDb: jest.fn()
 }));
 
+jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
+  getUserByUidDb: jest.fn(),
+  updateUserDb: jest.fn(),
+  reserveAiGeneration: jest.fn(),
+  releaseAiGeneration: jest.fn()
+}));
+
 jest.unstable_mockModule('../../src/services/aiClient.js', () => ({
   generateFlashcardsFromText: jest.fn()
 }));
 
 const noteRepository = await import('../../src/repositories/noteRepository.js');
 const subjectRepository = await import('../../src/repositories/subjectRepository.js');
+const userRepository = await import('../../src/repositories/userRepository.js');
 const { createManyFlashcardsDb } = await import('../../src/repositories/flashcardRepository.js');
 const { generateFlashcardsFromText } = await import('../../src/services/aiClient.js');
 const {
@@ -33,7 +41,7 @@ const {
   generateFlashcardsForNote,
   MAX_NOTE_CHARS
 } = await import('../../src/services/notesService.js');
-const { ValidationError, NotFoundError } = await import('../../src/errors/AppError.js');
+const { ValidationError, NotFoundError, BadGatewayError } = await import('../../src/errors/AppError.js');
 
 const OWN_SUBJECT = { subjectId: 's1', userId: 'u1', title: 'Minha' };
 const OTHERS_SUBJECT = { subjectId: 's2', userId: 'u2', title: 'De outro' };
@@ -217,28 +225,99 @@ describe('Unidade - notesService', () => {
     });
   });
 
-  describe('generateFlashcardsForNote (comportamento atual, refeito na Fase 6)', () => {
-    it('Deve gerar flashcards via IA para uma nota existente e salvá-los no repositório', async () => {
-      const mockNoteInput = {
-        noteId: 'note-123',
-        subjectId: '1',
-        title: 'Nota de Teste',
-        content: 'Conteúdo de teste para IA.',
-        createdAt: new Date().toISOString()
-      };
-      const mockGeneratedCards = [{ front: 'Pergunta 1?', back: 'Resposta 1' }];
-      const mockSavedCards = [
-        { flashcardId: 'card-1', noteId: 'note-123', subjectId: '1', ...mockGeneratedCards[0] }
-      ];
+  describe('generateFlashcardsForNote', () => {
+    const NOTE = { noteId: 'n1', userId: 'u1', subjectId: 's1', title: 'T', content: 'Conteúdo' };
+    const AI_CARDS = [{ front: 'P1?', back: 'R1' }, { front: 'P2?', back: 'R2' }];
 
-      generateFlashcardsFromText.mockResolvedValue(mockGeneratedCards);
-      createManyFlashcardsDb.mockResolvedValue(mockSavedCards);
+    beforeEach(() => {
+      noteRepository.getNoteByIdDb.mockResolvedValue(NOTE);
+      userRepository.getUserByUidDb.mockResolvedValue({ uid: 'u1', plan: 'free', xp: 0, level: 1 });
+      userRepository.reserveAiGeneration.mockResolvedValue({ count: 1, limit: 3 });
+      userRepository.releaseAiGeneration.mockResolvedValue();
+      userRepository.updateUserDb.mockResolvedValue({});
+      generateFlashcardsFromText.mockResolvedValue(AI_CARDS);
+      createManyFlashcardsDb.mockImplementation(async (cards) =>
+        cards.map((c, i) => ({ flashcardId: `c${i}`, ...c })));
+    });
 
-      const result = await generateFlashcardsForNote('1', mockNoteInput);
+    it('Deve gerar cards source ai, rating 1, state new, ligados à nota e à matéria', async () => {
+      const result = await generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' });
 
-      expect(generateFlashcardsFromText).toHaveBeenCalledTimes(1);
-      expect(createManyFlashcardsDb).toHaveBeenCalledTimes(1);
-      expect(result.flashcards).toEqual(mockSavedCards);
+      const [saved] = createManyFlashcardsDb.mock.calls[0];
+      expect(saved).toHaveLength(2);
+      expect(saved[0]).toMatchObject({
+        userId: 'u1', subjectId: 's1', noteId: 'n1',
+        source: 'ai', rating: 1, state: 'new', front: 'P1?', back: 'R1'
+      });
+      expect(result.flashcards).toHaveLength(2);
+    });
+
+    it('Deve enviar à IA só título e conteúdo e NÃO alterar a nota', async () => {
+      await generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' });
+
+      expect(generateFlashcardsFromText).toHaveBeenCalledWith('T', 'Conteúdo');
+      expect(noteRepository.updateNoteDb).not.toHaveBeenCalled();
+      expect(noteRepository.deleteNoteDb).not.toHaveBeenCalled();
+    });
+
+    it('Deve reservar com o limite do plano, liberar sem reembolso e dar +1 XP por card', async () => {
+      const result = await generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' });
+
+      expect(userRepository.reserveAiGeneration).toHaveBeenCalledWith(
+        'u1', expect.objectContaining({ limit: 3 })
+      );
+      expect(userRepository.releaseAiGeneration).toHaveBeenCalledWith('u1', { refund: false });
+      expect(userRepository.updateUserDb).toHaveBeenCalledWith('u1', { xp: 2, level: 1 });
+      expect(result.gamification).toMatchObject({ gainedXp: 2, totalXp: 2 });
+      expect(result.usage).toEqual({ count: 1, limit: 3 });
+    });
+
+    it('Deve lançar NotFoundError para nota inexistente ou alheia, sem reservar cota', async () => {
+      noteRepository.getNoteByIdDb.mockResolvedValueOnce(null);
+      await expect(generateFlashcardsForNote({ userId: 'u1', noteId: 'x' }))
+        .rejects.toBeInstanceOf(NotFoundError);
+
+      noteRepository.getNoteByIdDb.mockResolvedValueOnce({ ...NOTE, userId: 'u2' });
+      await expect(generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' }))
+        .rejects.toBeInstanceOf(NotFoundError);
+
+      expect(userRepository.reserveAiGeneration).not.toHaveBeenCalled();
+    });
+
+    it('Deve propagar a falha da reserva (403/409) sem chamar a IA', async () => {
+      userRepository.reserveAiGeneration.mockRejectedValue(new Error('limite'));
+
+      await expect(generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' })).rejects.toThrow('limite');
+      expect(generateFlashcardsFromText).not.toHaveBeenCalled();
+      expect(userRepository.releaseAiGeneration).not.toHaveBeenCalled();
+    });
+
+    it('Deve devolver a cota e propagar o erro quando a IA falha', async () => {
+      generateFlashcardsFromText.mockRejectedValue(new BadGatewayError());
+
+      await expect(generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' }))
+        .rejects.toBeInstanceOf(BadGatewayError);
+
+      expect(userRepository.releaseAiGeneration).toHaveBeenCalledWith('u1', { refund: true });
+      expect(createManyFlashcardsDb).not.toHaveBeenCalled();
+    });
+
+    it('Deve devolver a cota quando salvar os cards falha', async () => {
+      createManyFlashcardsDb.mockRejectedValue(new Error('firestore'));
+
+      await expect(generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' })).rejects.toThrow('firestore');
+      expect(userRepository.releaseAiGeneration).toHaveBeenCalledWith('u1', { refund: true });
+    });
+
+    it('Não deve desfazer a geração se a gravação do XP falhar', async () => {
+      userRepository.updateUserDb.mockRejectedValue(new Error('xp'));
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = await generateFlashcardsForNote({ userId: 'u1', noteId: 'n1' });
+
+      expect(result.flashcards).toHaveLength(2);
+      expect(result.gamification).toBeNull();
+      spy.mockRestore();
     });
   });
 });

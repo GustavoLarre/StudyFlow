@@ -2,6 +2,10 @@ import { db } from '../config/firebase.js';
 
 const COLLECTION_NAME = 'flashcards';
 
+function toCard(doc) {
+  return { flashcardId: doc.id, ...doc.data() };
+}
+
 export async function createFlashcardDb(flashcardData) {
   const docRef = await db.collection(COLLECTION_NAME).add(flashcardData);
   return { flashcardId: docRef.id, ...flashcardData };
@@ -26,38 +30,48 @@ export async function getFlashcardsByNoteDb(noteId) {
     .where('noteId', '==', noteId)
     .get();
 
-  return snapshot.docs.map(doc => ({
-    flashcardId: doc.id,
-    ...doc.data()
-  }));
+  return snapshot.docs.map(toCard);
+}
+
+export async function getFlashcardsBySubjectDb(subjectId) {
+  const snapshot = await db.collection(COLLECTION_NAME)
+    .where('subjectId', '==', subjectId)
+    .get();
+
+  return snapshot.docs.map(toCard);
 }
 
 export async function getFlashcardByIdDb(flashcardId) {
-  const docRef = db.collection(COLLECTION_NAME).doc(flashcardId);
-  const docSnap = await docRef.get();
+  const docSnap = await db.collection(COLLECTION_NAME).doc(flashcardId).get();
 
   if (!docSnap.exists) {
     return null;
   }
 
-  return { flashcardId: docSnap.id, ...docSnap.data() };
+  return toCard(docSnap);
 }
 
 export async function updateFlashcardDb(flashcardId, updateData) {
   const docRef = db.collection(COLLECTION_NAME).doc(flashcardId);
+
+  // update() falha se o documento não existir
   await docRef.update(updateData);
-  
-  const updatedSnap = await docRef.get();
-  return { flashcardId: updatedSnap.id, ...updatedSnap.data() };
+
+  return toCard(await docRef.get());
 }
 
-export async function getDueFlashcardsDb(currentDateIso) {
-  const snapshot = await db.collection(COLLECTION_NAME)
-    .where('dueDate', '<=', currentDateIso)
-    .get();
+export async function deleteFlashcardDb(flashcardId) {
+  await db.collection(COLLECTION_NAME).doc(flashcardId).delete();
+}
 
-  return snapshot.docs.map(doc => ({
-    flashcardId: doc.id,
-    ...doc.data()
-  }));
+export async function getDueFlashcardsDb(userId, nowIso, { subjectId } = {}) {
+  let query = db.collection(COLLECTION_NAME).where('userId', '==', userId);
+
+  if (subjectId) {
+    query = query.where('subjectId', '==', subjectId);
+  }
+
+  const snapshot = await query.where('dueDate', '<=', nowIso).get();
+
+  return snapshot.docs.map(toCard);
 }

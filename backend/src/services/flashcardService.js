@@ -1,104 +1,118 @@
-import { calculateNextReview } from './spacedRepetitionService.js';
+import {
+  createFlashcardDb,
+  getFlashcardsBySubjectDb,
+  getFlashcardByIdDb,
+  updateFlashcardDb,
+  deleteFlashcardDb
+} from '../repositories/flashcardRepository.js';
+import { getSubjectByIdDb } from '../repositories/subjectRepository.js';
+import { getNoteByIdDb } from '../repositories/noteRepository.js';
+import { getUserByUidDb, updateUserDb } from '../repositories/userRepository.js';
+import { buildNewFlashcard, FLASHCARD_SOURCES } from '../config/flashcards.js';
 import { addXp } from './gamificationService.js';
+import { ValidationError, NotFoundError } from '../errors/AppError.js';
 
-// Banco em memória simulado para flashcards e usuário
-const flashcardsDb = [];
-let mockUserSession = { xp: 100, level: 1 }; // Usuário simulado para teste/sessão
+export const MAX_CARD_TEXT = 500;
+const XP_PER_CREATED_CARD = 1;
 
-export async function createManualFlashcard({ noteId, front, back }) {
-  if (!noteId) {
-    throw new Error('O ID da nota é obrigatório.');
+function normalizeText(value, label) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new ValidationError(`O campo ${label} é obrigatório.`);
   }
 
-  if (!front || front.trim() === '' || !back || back.trim() === '') {
-    throw new Error('Os campos front e back são obrigatórios.');
+  const trimmed = value.trim();
+  if (trimmed.length > MAX_CARD_TEXT) {
+    throw new ValidationError(`O campo ${label} deve ter no máximo ${MAX_CARD_TEXT} caracteres.`);
   }
 
-  const newFlashcard = {
-    flashcardId: `card_${Date.now()}`,
-    noteId,
-    front: front.trim(),
-    back: back.trim(),
-    interval: 0,
-    repetition: 0,
-    easeFactor: 2.5,
-    dueDate: new Date().toISOString(),
-    createdAt: new Date().toISOString()
-  };
-
-  flashcardsDb.push(newFlashcard);
-  return newFlashcard;
+  return trimmed;
 }
 
-export async function getFlashcardsByNote(noteId) {
-  if (!noteId) {
-    throw new Error('O ID da nota é obrigatório.');
+async function getOwnedSubject(userId, subjectId) {
+  const subject = await getSubjectByIdDb(subjectId);
+  if (!subject || subject.userId !== userId) {
+    throw new NotFoundError('Matéria não encontrada.');
   }
-
-  return flashcardsDb.filter(card => card.noteId === noteId);
+  return subject;
 }
 
-export async function getDueFlashcards() {
-  const now = new Date();
-  return flashcardsDb.filter(card => new Date(card.dueDate) <= now);
+async function getOwnedFlashcard(userId, flashcardId) {
+  const card = await getFlashcardByIdDb(flashcardId);
+  // Inexistente e de outro usuário respondem igual: não vaza que o ID existe
+  if (!card || card.userId !== userId) {
+    throw new NotFoundError('Flashcard não encontrado.');
+  }
+  return card;
 }
 
-/**
- * Realiza a revisão de um flashcard, aplica repetição espaçada e pontua XP.
- */
-export async function reviewFlashcard(flashcardId, rating) {
-  const normalizedRating = rating.toLowerCase();
+async function assertNoteBelongs(userId, subjectId, noteId) {
+  const note = await getNoteByIdDb(noteId);
+  if (!note || note.userId !== userId || note.subjectId !== subjectId) {
+    throw new NotFoundError('Nota não encontrada.');
+  }
+}
 
-  // Tabela de XP por rating
-  const xpTable = {
-    again: 2,
-    hard: 5,
-    good: 10,
-    easy: 15
-  };
+async function grantXp(userId, amount) {
+  try {
+    const user = await getUserByUidDb(userId);
+    const updated = addXp(user, amount);
+    await updateUserDb(userId, { xp: updated.xp, level: updated.level });
+    return { gainedXp: amount, totalXp: updated.xp, level: updated.level };
+  } catch (error) {
+    console.error('Falha ao gravar XP:', error.message);
+    return null;
+  }
+}
 
-  if (!xpTable[normalizedRating]) {
-    throw new Error(`Avaliação inválida: ${rating}`);
+export async function createFlashcard({ userId, subjectId, noteId = null, front, back }) {
+  const normalizedFront = normalizeText(front, 'front');
+  const normalizedBack = normalizeText(back, 'back');
+
+  await getOwnedSubject(userId, subjectId);
+  if (noteId) {
+    await assertNoteBelongs(userId, subjectId, noteId);
   }
 
-  const gainedXp = xpTable[normalizedRating];
+  const flashcard = await createFlashcardDb(
+    buildNewFlashcard({
+      userId,
+      subjectId,
+      noteId: noteId || null,
+      source: FLASHCARD_SOURCES.MANUAL,
+      front: normalizedFront,
+      back: normalizedBack
+    })
+  );
 
-  let flashcard = flashcardsDb.find(card => card.flashcardId === flashcardId);
+  const gamification = await grantXp(userId, XP_PER_CREATED_CARD);
 
-  const currentState = flashcard ? {
-    interval: flashcard.interval,
-    repetition: flashcard.repetition,
-    easeFactor: flashcard.easeFactor
-  } : { interval: 1, repetition: 1, easeFactor: 2.5 };
+  return { flashcard, gamification };
+}
 
-  const updatedState = calculateNextReview(currentState, normalizedRating);
+export async function listFlashcards({ userId, subjectId }) {
+  await getOwnedSubject(userId, subjectId);
+  return await getFlashcardsBySubjectDb(subjectId);
+}
 
-  if (flashcard) {
-    flashcard.interval = updatedState.interval;
-    flashcard.repetition = updatedState.repetition;
-    flashcard.easeFactor = updatedState.easeFactor;
-    flashcard.dueDate = updatedState.dueDate;
+export async function getFlashcard({ userId, flashcardId }) {
+  return await getOwnedFlashcard(userId, flashcardId);
+}
+
+export async function updateFlashcard({ userId, flashcardId, front, back }) {
+  const changes = {};
+  if (front !== undefined) changes.front = normalizeText(front, 'front');
+  if (back !== undefined) changes.back = normalizeText(back, 'back');
+
+  if (Object.keys(changes).length === 0) {
+    throw new ValidationError('Informe front ou back para atualizar.');
   }
 
-  const targetCard = flashcard || {
-    flashcardId,
-    ...updatedState
-  };
+  await getOwnedFlashcard(userId, flashcardId);
 
-  // Atualiza o XP e o nível do usuário
-  const previousLevel = mockUserSession.level;
-  const updatedUser = addXp(mockUserSession, gainedXp);
-  mockUserSession = updatedUser; // Salva o novo estado na sessão simulada
+  return await updateFlashcardDb(flashcardId, { ...changes, updatedAt: new Date().toISOString() });
+}
 
-  const leveledUp = updatedUser.level > previousLevel;
-
-  return {
-    flashcard: targetCard,
-    gamification: {
-      gainedXp,
-      totalXp: updatedUser.xp,
-      level: updatedUser.level,
-      leveledUp
-    }
-  };
+export async function deleteFlashcard({ userId, flashcardId }) {
+  await getOwnedFlashcard(userId, flashcardId);
+  await deleteFlashcardDb(flashcardId);
 }
