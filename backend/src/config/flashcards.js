@@ -40,7 +40,6 @@ export function buildNewFlashcard({ userId, subjectId, noteId = null, source, fr
     step: 0,
     lapses: 0,
     interval: 0,
-    repetition: 0,
     easeFactor: INITIAL_EASE_FACTOR,
     dueDate: now,
     createdAt: now,

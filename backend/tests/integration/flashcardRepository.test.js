@@ -77,9 +77,9 @@ describe('Repositório de Flashcards - Firestore', () => {
   it('Deve atualizar os campos e retornar o card atualizado', async () => {
     const created = await createFlashcardDb(card());
 
-    const updated = await updateFlashcardDb(created.flashcardId, { interval: 1, repetition: 1, easeFactor: 2.6 });
+    const updated = await updateFlashcardDb(created.flashcardId, { interval: 1, lapses: 1, easeFactor: 2.6 });
 
-    expect(updated).toMatchObject({ interval: 1, repetition: 1, easeFactor: 2.6, front: 'P?' });
+    expect(updated).toMatchObject({ interval: 1, lapses: 1, easeFactor: 2.6, front: 'P?' });
   });
 
   it('Deve falhar ao atualizar um flashcard inexistente', async () => {

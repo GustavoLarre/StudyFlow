@@ -49,9 +49,11 @@ describe('Unidade - Defaults de flashcard', () => {
         step: 0,
         lapses: 0,
         interval: 0,
-        repetition: 0,
         easeFactor: INITIAL_EASE_FACTOR
       });
+
+      expect(card).not.toHaveProperty('repetition');
+      
     });
 
     it('Deve vencer imediatamente e registrar createdAt e updatedAt', () => {
