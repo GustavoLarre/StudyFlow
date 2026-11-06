@@ -1,19 +1,11 @@
-import { getSubjectProgressDb } from '../repositories/progressRepository.js';
-import { db } from '../config/firebase.js';
+import * as progressService from '../services/progressService.js';
+import { handleError } from '../errors/handleError.js';
 
-export async function getGeneralProgress(req, res) {
+export async function getProgress(req, res) {
   try {
-    const subjectsSnap = await db.collection('subjects').get();
-    const progressList = [];
-
-    for (const doc of subjectsSnap.docs) {
-      const progress = await getSubjectProgressDb(doc.id);
-      progressList.push(progress);
-    }
-
-    return res.status(200).json(progressList);
+    const { xp, subjects } = await progressService.getProgress(req.user.uid);
+    return res.status(200).json({ success: true, xp, subjects });
   } catch (error) {
-    console.error('Erro ao buscar progresso geral:', error);
-    return res.status(500).json({ error: 'Erro interno ao buscar progresso.' });
+    return handleError(res, error);
   }
 }

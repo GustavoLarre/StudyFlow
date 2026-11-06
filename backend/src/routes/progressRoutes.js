@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { getGeneralProgress } from '../controllers/progressController.js';
+import * as progressController from '../controllers/progressController.js';
 
 const router = Router();
-router.get('/', getGeneralProgress);
+
+router.get('/', progressController.getProgress);
 
 export default router;

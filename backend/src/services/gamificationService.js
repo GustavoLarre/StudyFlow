@@ -36,3 +36,21 @@ export function addXp(user, xpToAdd) {
     gainedXp: xpToAdd
   };
 }
+
+/**
+ * Progresso dentro do nível atual (para a barra de XP).
+ * currentLevelXp: XP acumulado no nível; nextLevelXp: custo do nível atual até o próximo.
+ */
+export function getLevelProgress(totalXp) {
+  let remaining = Math.max(0, Number(totalXp) || 0);
+  let level = 1;
+  let cost = 100;
+
+  while (remaining >= cost) {
+    remaining -= cost;
+    level += 1;
+    cost = level * 100;
+  }
+
+  return { level, currentLevelXp: remaining, nextLevelXp: cost };
+}

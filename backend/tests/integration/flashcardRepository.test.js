@@ -3,6 +3,7 @@ import {
   createManyFlashcardsDb,
   getFlashcardsByNoteDb,
   getFlashcardsBySubjectDb,
+  getFlashcardsByUserDb,
   getFlashcardByIdDb,
   updateFlashcardDb,
   deleteFlashcardDb,
@@ -61,6 +62,17 @@ describe('Repositório de Flashcards - Firestore', () => {
     await createFlashcardDb(card({ subjectId: 'sub_2', front: 'c' }));
 
     const cards = await getFlashcardsBySubjectDb('sub_1');
+
+    expect(cards.map((c) => c.front).sort()).toEqual(['a', 'b']);
+  });
+
+  // NOVO (8.2)
+  it('Deve listar todos os flashcards do usuário, de todas as matérias', async () => {
+    await createFlashcardDb(card({ subjectId: 'sub_1', front: 'a' }));
+    await createFlashcardDb(card({ subjectId: 'sub_2', front: 'b' }));
+    await createFlashcardDb(card({ userId: 'user_2', front: 'de outro' }));
+
+    const cards = await getFlashcardsByUserDb('user_1');
 
     expect(cards.map((c) => c.front).sort()).toEqual(['a', 'b']);
   });

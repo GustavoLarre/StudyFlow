@@ -51,6 +51,14 @@ export async function getFlashcardByIdDb(flashcardId) {
   return toCard(docSnap);
 }
 
+export async function getFlashcardsByUserDb(userId) {
+  const snapshot = await db.collection(COLLECTION_NAME)
+    .where('userId', '==', userId)
+    .get();
+
+  return snapshot.docs.map(toCard);
+}
+
 export async function updateFlashcardDb(flashcardId, updateData) {
   const docRef = db.collection(COLLECTION_NAME).doc(flashcardId);
 
