@@ -1,53 +1,52 @@
-import { 
-  createTaskDb, 
-  getTasksDb, 
-  completeAndDeleteTaskDb 
+import {
+  createTaskDb, getTasksByUserDb, getTaskByIdDb, updateTaskDb, deleteTaskDb
 } from '../../src/repositories/taskRepository.js';
 import { clearAll } from '../helpers/emulator.js';
 
-describe('Repositório de Tarefas - Firestore (CRUD & Auto-Delete)', () => {
-  let createdTaskId;
-
-  beforeAll(async () => {
+describe('Repositório de Tarefas - Firestore', () => {
+  beforeEach(async () => {
     await clearAll();
   });
 
-  it('Deve criar uma tarefa com sucesso no Firestore', async () => {
-    const taskData = {
-      date: '2026-10-23',
-      text: 'Revisar algoritmos de grafos e ponteiros',
-      completed: false,
-      createdAt: new Date().toISOString()
-    };
-
-    const result = await createTaskDb(taskData);
+  it('Cria uma tarefa e devolve o taskId', async () => {
+    const result = await createTaskDb({ userId: 'u1', date: '2026-10-23', text: 'Estudar', completed: false });
 
     expect(result).toHaveProperty('taskId');
-    expect(result.text).toBe(taskData.text);
-    expect(result.completed).toBe(false);
-
-    createdTaskId = result.taskId;
+    expect(result).toMatchObject({ userId: 'u1', text: 'Estudar' });
   });
 
-  it('Deve listar apenas as tarefas pendentes', async () => {
-    const tasks = await getTasksDb();
+  it('Lista só as tarefas do usuário, pendentes e concluídas', async () => {
+    await createTaskDb({ userId: 'u1', date: '2026-10-23', text: 'a', completed: false });
+    await createTaskDb({ userId: 'u1', date: '2026-10-24', text: 'b', completed: true });
+    await createTaskDb({ userId: 'u2', date: '2026-10-23', text: 'c', completed: false });
 
-    expect(Array.isArray(tasks)).toBe(true);
-    expect(tasks).toHaveLength(1); // só a tarefa criada neste arquivo
+    const tasks = await getTasksByUserDb('u1');
 
-    const found = tasks.find(t => t.taskId === createdTaskId);
-    expect(found).toBeDefined();
-    expect(found.completed).toBe(false);
+    expect(tasks.map((t) => t.text).sort()).toEqual(['a', 'b']);
   });
 
-  it('Deve concluir e apagar automaticamente a tarefa do Firestore', async () => {
-    // Ação de concluir a tarefa aciona a exclusão automática
-    const deleted = await completeAndDeleteTaskDb(createdTaskId);
-    expect(deleted).toBe(true);
+  it('Busca por ID e devolve null se não existir', async () => {
+    const created = await createTaskDb({ userId: 'u1', date: '2026-10-23', text: 'a', completed: false });
 
-    // Verifica se ela sumiu de vez do Firestore
-    const tasksAfter = await getTasksDb();
-    const found = tasksAfter.find(t => t.taskId === createdTaskId);
-    expect(found).toBeUndefined();
+    expect(await getTaskByIdDb(created.taskId)).toMatchObject({ taskId: created.taskId, text: 'a' });
+    expect(await getTaskByIdDb('fantasma')).toBeNull();
+  });
+
+  it('Atualiza campos e devolve a tarefa; falha se não existir', async () => {
+    const created = await createTaskDb({ userId: 'u1', date: '2026-10-23', text: 'a', completed: false });
+
+    const updated = await updateTaskDb(created.taskId, { completed: true });
+
+    expect(updated).toMatchObject({ completed: true, text: 'a' });
+    await expect(updateTaskDb('fantasma', { text: 'x' })).rejects.toThrow();
+  });
+
+  it('Exclui a tarefa e não falha se ela não existir', async () => {
+    const created = await createTaskDb({ userId: 'u1', date: '2026-10-23', text: 'a', completed: false });
+
+    await deleteTaskDb(created.taskId);
+
+    expect(await getTaskByIdDb(created.taskId)).toBeNull();
+    await expect(deleteTaskDb('fantasma')).resolves.not.toThrow();
   });
 });

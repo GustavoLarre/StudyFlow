@@ -1,50 +1,60 @@
-import { createTaskDb, getTasksDb, completeAndDeleteTaskDb } from '../repositories/taskRepository.js';
+import * as taskService from '../services/taskService.js';
+import { handleError } from '../errors/handleError.js';
 
-export async function createTask(req, res) {
+export async function create(req, res) {
   try {
-    const { date, text } = req.body;
-
-    if (!date || !text) {
-      return res.status(400).json({ error: 'Data (título) e texto da tarefa são obrigatórios.' });
-    }
-
-    const taskData = {
-      date,
-      text,
-      completed: false,
-      createdAt: new Date().toISOString()
-    };
-
-    const newTask = await createTaskDb(taskData);
-    return res.status(201).json(newTask);
+    const task = await taskService.createTask({
+      userId: req.user.uid,
+      date: req.body?.date,
+      text: req.body?.text
+    });
+    return res.status(201).json({ success: true, task });
   } catch (error) {
-    console.error('Erro ao criar tarefa:', error);
-    return res.status(500).json({ error: 'Erro interno ao criar tarefa.' });
+    return handleError(res, error);
   }
 }
 
-export async function listTasks(req, res) {
+export async function list(req, res) {
   try {
-    const tasks = await getTasksDb();
-    return res.status(200).json(tasks);
+    const tasks = await taskService.listTasks(req.user.uid);
+    return res.status(200).json({ success: true, tasks });
   } catch (error) {
-    console.error('Erro ao listar tarefas:', error);
-    return res.status(500).json({ error: 'Erro interno ao listar tarefas.' });
+    return handleError(res, error);
   }
 }
 
-export async function completeTask(req, res) {
+export async function update(req, res) {
   try {
-    const { taskId } = req.params;
-    const success = await completeAndDeleteTaskDb(taskId);
-
-    if (!success) {
-      return res.status(404).json({ error: 'Tarefa não encontrada.' });
-    }
-
-    return res.status(200).json({ message: 'Tarefa concluída e removida com sucesso.' });
+    const task = await taskService.updateTask({
+      userId: req.user.uid,
+      taskId: req.params.id,
+      date: req.body?.date,
+      text: req.body?.text
+    });
+    return res.status(200).json({ success: true, task });
   } catch (error) {
-    console.error('Erro ao concluir tarefa:', error);
-    return res.status(500).json({ error: 'Erro interno ao concluir tarefa.' });
+    return handleError(res, error);
+  }
+}
+
+export async function complete(req, res) {
+  try {
+    const task = await taskService.setTaskCompleted({
+      userId: req.user.uid,
+      taskId: req.params.id,
+      completed: req.body?.completed
+    });
+    return res.status(200).json({ success: true, task });
+  } catch (error) {
+    return handleError(res, error);
+  }
+}
+
+export async function remove(req, res) {
+  try {
+    await taskService.deleteTask({ userId: req.user.uid, taskId: req.params.id });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return handleError(res, error);
   }
 }

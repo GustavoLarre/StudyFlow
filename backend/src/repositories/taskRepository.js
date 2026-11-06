@@ -2,31 +2,32 @@ import { db } from '../config/firebase.js';
 
 const COLLECTION_NAME = 'tasks';
 
+const toTask = (doc) => ({ taskId: doc.id, ...doc.data() });
+
 export async function createTaskDb(taskData) {
   const docRef = await db.collection(COLLECTION_NAME).add(taskData);
   return { taskId: docRef.id, ...taskData };
 }
 
-export async function getTasksDb() {
-  const snapshot = await db.collection(COLLECTION_NAME)
-    .where('completed', '==', false)
-    .get();
-
-  return snapshot.docs.map(doc => ({
-    taskId: doc.id,
-    ...doc.data()
-  }));
+export async function getTasksByUserDb(userId) {
+  const snapshot = await db.collection(COLLECTION_NAME).where('userId', '==', userId).get();
+  return snapshot.docs.map(toTask);
 }
 
-export async function completeAndDeleteTaskDb(taskId) {
+export async function getTaskByIdDb(taskId) {
+  const docSnap = await db.collection(COLLECTION_NAME).doc(taskId).get();
+  return docSnap.exists ? toTask(docSnap) : null;
+}
+
+export async function updateTaskDb(taskId, updateData) {
   const docRef = db.collection(COLLECTION_NAME).doc(taskId);
-  const docSnap = await docRef.get();
 
-  if (!docSnap.exists) {
-    return false;
-  }
+  // update() falha se o documento não existir
+  await docRef.update(updateData);
 
-  // Deleta o documento do Firestore imediatamente após a conclusão
-  await docRef.delete();
-  return true;
+  return toTask(await docRef.get());
+}
+
+export async function deleteTaskDb(taskId) {
+  await db.collection(COLLECTION_NAME).doc(taskId).delete();
 }
