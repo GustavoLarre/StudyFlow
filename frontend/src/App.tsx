@@ -7,6 +7,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { SubjectsPage } from './pages/SubjectsPage'
 import { SubjectDetailPage } from './pages/SubjectDetailPage'
 import { NoteEditorPage } from './pages/NoteEditorPage'
+import { ReviewPage } from './pages/ReviewPage'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/revisao" element={<h1>Revisão</h1>} />
         <Route path="/progresso" element={<h1>Progresso</h1>} />
         <Route path="/tarefas" element={<h1>Tarefas</h1>} />
+        <Route path="/revisao" element={<ReviewPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/materias" replace />} />
