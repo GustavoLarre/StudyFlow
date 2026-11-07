@@ -1,0 +1,15 @@
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px; padding: 28px 20px; display: flex; flex-direction: column; gap: 28px;
+  background: var(--surface); border-right: 1px solid var(--border);
+}
+.brand { font-family: var(--font-pixel); font-size: 20px; font-weight: 700; color: var(--accent-soft); }
+.nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.link { padding: 11px 14px; border-radius: 10px; color: var(--text-muted); text-decoration: none; }
+.link:hover { color: var(--text); background: var(--surface-2); }
+.active { color: var(--text); background: rgba(108, 75, 255, 0.18); }
+.logout {
+  padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.content { flex: 1; padding: 40px 48px; }
