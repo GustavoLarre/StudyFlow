@@ -11,9 +11,15 @@ import taskRoutes from './routes/taskRoutes.js';
 import meRoutes from './routes/meRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
+import cors from 'cors';
 
 const app = express();
 
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim());
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Público
