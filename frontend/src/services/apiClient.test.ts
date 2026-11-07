@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { createApiClient, ApiError } from './apiClient'
 
 const jsonResponse = (status: number, body: unknown) =>
-  ({ ok: status >= 200 && status < 300, status, json: async () => body }) as Response
+  ({ ok: status >= 200 && status < 300, status, json: async () => body }) as unknown as Response
 
 function build(overrides: Partial<Parameters<typeof createApiClient>[0]> = {}) {
   const fetchFn = vi.fn()
@@ -94,7 +94,11 @@ describe('apiClient', () => {
 
   it('resposta de erro sem JSON usa mensagem genérica', async () => {
     const { client, fetchFn } = build()
-    fetchFn.mockResolvedValue({ ok: false, status: 500, json: async () => { throw new Error('x') } } as Response)
+        fetchFn.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => { throw new Error('x') },
+    } as unknown as Response)
 
     await expect(client.get('/x')).rejects.toMatchObject({ status: 500, message: 'Erro inesperado (500).' })
   })
