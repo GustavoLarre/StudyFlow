@@ -21,10 +21,9 @@ export default function App() {
         <Route path="/materias/:id" element={<SubjectDetailPage />} />
         <Route path="/materias/:id/notas/nova" element={<NoteEditorPage />} />
         <Route path="/materias/:id/notas/:noteId" element={<NoteEditorPage />} />
-        <Route path="/revisao" element={<h1>Revisão</h1>} />
+        <Route path="/revisao" element={<ReviewPage />} />
         <Route path="/progresso" element={<h1>Progresso</h1>} />
         <Route path="/tarefas" element={<h1>Tarefas</h1>} />
-        <Route path="/revisao" element={<ReviewPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/materias" replace />} />
