@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { SubjectsPage } from './pages/SubjectsPage'
 import { SubjectDetailPage } from './pages/SubjectDetailPage'
+import { NoteEditorPage } from './pages/NoteEditorPage'
 
 export default function App() {
   return (
@@ -17,6 +18,8 @@ export default function App() {
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="/materias" element={<SubjectsPage />} />
         <Route path="/materias/:id" element={<SubjectDetailPage />} />
+        <Route path="/materias/:id/notas/nova" element={<NoteEditorPage />} />
+        <Route path="/materias/:id/notas/:noteId" element={<NoteEditorPage />} />
         <Route path="/revisao" element={<h1>Revisão</h1>} />
         <Route path="/progresso" element={<h1>Progresso</h1>} />
         <Route path="/tarefas" element={<h1>Tarefas</h1>} />
