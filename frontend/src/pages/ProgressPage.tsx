@@ -71,7 +71,7 @@ export function ProgressPage({ progress: api = progressApi }: { progress?: Progr
       )}
 
       <p className={styles.legend}>
-        Legenda: "Novo" são flashcards ainda não revisados. "Difícil" vem do botão De novo e "Médio" vem do botão Difícil.
+        Legenda: "Novo" são flashcards ainda não revisados. 
       </p>
     </section>
   )
