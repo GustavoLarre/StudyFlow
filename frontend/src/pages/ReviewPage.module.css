@@ -15,3 +15,6 @@
 .answer:hover:not(:disabled), .primary:hover { background: var(--accent-hover); }
 .answer:disabled { opacity: 0.6; cursor: not-allowed; }
 .summary { text-align: center; padding: 40px 0; }
+.sessionHeader { display: flex; justify-content: space-between; align-items: center; }
+.exit { padding: 6px 12px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; }
+.exit:hover { color: var(--text); border-color: var(--accent); }

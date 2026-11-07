@@ -28,9 +28,10 @@ export function ReviewPage({
   const [revealed, setRevealed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState('')
-  const [lastXp, setLastXp] = useState<number | null>(null)
+  const [answered, setAnswered] = useState(0)
   const [leveledUp, setLeveledUp] = useState(false)
   const [totalXp, setTotalXp] = useState(0)
+  const [ended, setEnded] = useState(false)
   const [answering, setAnswering] = useState(false)
 
   const load = useCallback(async (selected: string) => {
@@ -38,9 +39,10 @@ export function ReviewPage({
     setAlert('')
     setIndex(0)
     setRevealed(false)
-    setLastXp(null)
+    setAnswered(0)
     setLeveledUp(false)
     setTotalXp(0)
+    setEnded(false)
     try {
       setQueue(await review.due(selected || undefined))
     } catch (e) {
@@ -63,10 +65,10 @@ export function ReviewPage({
     setAnswering(true)
     try {
       const { gamification } = await review.answer(current.flashcardId, action)
-      const gained = gamification?.gainedXp ?? 0
-      setLastXp(gained)
-      setLeveledUp(Boolean(gamification?.leveledUp))
-      setTotalXp((prev) => prev + gained)
+      // XP acumulado em silêncio: só aparece no resumo
+      setTotalXp((prev) => prev + (gamification?.gainedXp ?? 0))
+      if (gamification?.leveledUp) setLeveledUp(true)
+      setAnswered((prev) => prev + 1)
       setRevealed(false)
       setIndex((prev) => prev + 1)
     } catch (e) {
@@ -77,7 +79,7 @@ export function ReviewPage({
   }
 
   const current = queue[index]
-  const finished = !loading && queue.length > 0 && index >= queue.length
+  const finished = !loading && queue.length > 0 && (ended || index >= queue.length)
 
   return (
     <section className={styles.page}>
@@ -100,15 +102,19 @@ export function ReviewPage({
         <p className={styles.empty}>Nenhum flashcard para revisar agora.</p>
       ) : finished ? (
         <div className={styles.summary}>
-          <h2>Sessão concluída</h2>
-          <p>{queue.length} {queue.length === 1 ? 'flashcard revisado' : 'flashcards revisados'}, +{totalXp} XP</p>
+          <h2>{ended ? 'Sessão encerrada' : 'Sessão concluída'}</h2>
+          <p>
+            {answered} {answered === 1 ? 'flashcard revisado' : 'flashcards revisados'}, +{totalXp} XP
+          </p>
+          {leveledUp && <p className={styles.level} role="status">Subiu de nível!</p>}
           <button type="button" className={styles.primary} onClick={() => void load(subjectId)}>Revisar de novo</button>
         </div>
       ) : (
         <div className={styles.session}>
-          <p className={styles.progress}>Card {index + 1} de {queue.length}</p>
-          {lastXp !== null && <p className={styles.xp} role="status">+{lastXp} XP</p>}
-          {leveledUp && <p className={styles.level} role="status">Subiu de nível!</p>}
+          <div className={styles.sessionHeader}>
+            <p className={styles.progress}>Card {index + 1} de {queue.length}</p>
+            <button type="button" className={styles.exit} onClick={() => setEnded(true)}>Sair da revisão</button>
+          </div>
 
           <div className={styles.card}>
             <p className={styles.front}>{current.front}</p>

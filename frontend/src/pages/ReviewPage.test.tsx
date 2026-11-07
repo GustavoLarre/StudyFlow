@@ -61,7 +61,7 @@ describe('ReviewPage', () => {
 
   it.each([
     ['Muito fácil', 'easy'], ['Fácil', 'good'], ['Difícil', 'hard'], ['De novo', 'again'],
-  ])('%s envia a ação %s, mostra o XP e avança', async (label, action) => {
+  ])('%s envia a ação %s e avança sem mostrar XP', async (label, action) => {
     const { review, user } = setup()
     await screen.findByText('O que é HTTP?')
     await user.click(screen.getByRole('button', { name: 'Mostrar resposta' }))
@@ -70,22 +70,25 @@ describe('ReviewPage', () => {
 
     expect(review.answer).toHaveBeenCalledWith('c1', action)
     expect(await screen.findByText('O que é TCP?')).toBeInTheDocument()
-    expect(screen.getByText('+4 XP')).toBeInTheDocument()
+    expect(screen.queryByText(/XP/)).not.toBeInTheDocument()
     expect(screen.getByText('Card 2 de 2')).toBeInTheDocument()
   })
 
-  it('avisa quando sobe de nível', async () => {
+  it('não avisa subida de nível durante a sessão, só no resumo', async () => {
     const { review, user } = setup()
     review.answer.mockResolvedValue({ flashcard: C1, gamification: { gainedXp: 4, totalXp: 102, level: 2, leveledUp: true } })
     await screen.findByText('O que é HTTP?')
     await user.click(screen.getByRole('button', { name: 'Mostrar resposta' }))
-
     await user.click(screen.getByRole('button', { name: 'Muito fácil' }))
 
-    expect(await screen.findByText('Subiu de nível!')).toBeInTheDocument()
+    expect(await screen.findByText('O que é TCP?')).toBeInTheDocument()
+    expect(screen.queryByText('Subiu de nível!')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Sair da revisão' }))
+    expect(screen.getByText('Subiu de nível!')).toBeInTheDocument()
   })
 
-  it('ao terminar mostra o resumo e permite revisar de novo', async () => {
+  it('ao terminar mostra o resumo com o XP total e permite revisar de novo', async () => {
     const { review, user } = setup([C1])
     await screen.findByText('O que é HTTP?')
     await user.click(screen.getByRole('button', { name: 'Mostrar resposta' }))
@@ -96,6 +99,28 @@ describe('ReviewPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Revisar de novo' }))
     expect(review.due).toHaveBeenCalledTimes(2)
+  })
+
+  it('Sair da revisão encerra e soma só os cards respondidos', async () => {
+    const { user } = setup()
+    await screen.findByText('O que é HTTP?')
+    await user.click(screen.getByRole('button', { name: 'Mostrar resposta' }))
+    await user.click(screen.getByRole('button', { name: 'Fácil' }))
+    await screen.findByText('O que é TCP?')
+
+    await user.click(screen.getByRole('button', { name: 'Sair da revisão' }))
+
+    expect(screen.getByText('Sessão encerrada')).toBeInTheDocument()
+    expect(screen.getByText('1 flashcard revisado, +4 XP')).toBeInTheDocument()
+  })
+
+  it('Sair sem responder nada mostra 0 revisados', async () => {
+    const { user } = setup()
+    await screen.findByText('O que é HTTP?')
+
+    await user.click(screen.getByRole('button', { name: 'Sair da revisão' }))
+
+    expect(screen.getByText('0 flashcards revisados, +0 XP')).toBeInTheDocument()
   })
 
   it('erro ao avaliar mostra o alerta e mantém o card', async () => {
