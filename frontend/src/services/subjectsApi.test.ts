@@ -32,4 +32,12 @@ describe('subjectsApi', () => {
     await subjects.remove('s1')
     expect(api.delete).toHaveBeenCalledWith('/subjects/s1')
   })
+
+    it('get devolve uma matéria', async () => {
+    const { api, subjects } = build()
+    api.get.mockResolvedValue({ success: true, subject: { subjectId: 's1', title: 'Redes' } })
+
+    expect((await subjects.get('s1')).title).toBe('Redes')
+    expect(api.get).toHaveBeenCalledWith('/subjects/s1')
+  })
 })

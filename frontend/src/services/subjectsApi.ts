@@ -15,6 +15,7 @@ export function createSubjectsApi(client: Pick<ApiClient, 'get' | 'post' | 'put'
       (await client.put<{ subject: Subject }>(`/subjects/${id}`, { title })).subject,
     remove: async (id: string) =>
       (await client.delete<{ deleted: { notes: number; flashcards: number } }>(`/subjects/${id}`)).deleted,
+     get: async (id: string) => (await client.get<{ subject: Subject }>(`/subjects/${id}`)).subject,
   }
 }
 

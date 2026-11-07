@@ -4,10 +4,12 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { subjectsApi, type Subject, type SubjectsApi } from '../services/subjectsApi'
 import styles from './SubjectsPage.module.css'
 
+type SubjectsPageApi = Pick<SubjectsApi, 'list' | 'create' | 'rename' | 'remove'>
+
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Não foi possível concluir. Tente novamente.'
 
-export function SubjectsPage({ subjects: api = subjectsApi }: { subjects?: SubjectsApi }) {
+export function SubjectsPage({ subjects: api = subjectsApi }: { subjects?: SubjectsPageApi }) {
   const [items, setItems] = useState<Subject[]>([])
   const [loading, setLoading] = useState(true)
   const [title, setTitle] = useState('')
