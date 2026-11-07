@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { subjectsApi, type Subject, type SubjectsApi } from '../services/subjectsApi'
 import { NotesTab } from './NotesTab'
+import { FlashcardsTab } from './FlashcardsTab'
 import styles from './SubjectDetailPage.module.css'
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 export function SubjectDetailPage({
   subjects = subjectsApi,
   renderNotes = (id) => <NotesTab subjectId={id} />,
-  renderFlashcards = () => <p>Flashcards em breve.</p>,
+  renderFlashcards = (id) => <FlashcardsTab subjectId={id} />,
 }: Props) {
   const { id = '' } = useParams()
   const [params, setParams] = useSearchParams()
