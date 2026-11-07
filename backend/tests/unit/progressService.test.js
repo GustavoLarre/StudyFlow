@@ -15,7 +15,8 @@ const subjectRepo = await import('../../src/repositories/subjectRepository.js');
 const cardRepo = await import('../../src/repositories/flashcardRepository.js');
 const { getProgress } = await import('../../src/services/progressService.js');
 
-const card = (subjectId, rating) => ({ subjectId, rating });
+// Por padrão o card já foi revisado (state 'review')
+const card = (subjectId, rating, state = 'review') => ({ subjectId, rating, state });
 
 describe('Unidade - progressService.getProgress', () => {
   beforeEach(() => {
@@ -31,7 +32,7 @@ describe('Unidade - progressService.getProgress', () => {
     expect(result.xp).toEqual({ total: 120, level: 2, currentLevelXp: 20, nextLevelXp: 200 });
   });
 
-  it('Agrega os cards de cada matéria nas 4 categorias', async () => {
+  it('Agrega os cards de cada matéria nas categorias', async () => {
     subjectRepo.getSubjectsByUserDb.mockResolvedValue([
       { subjectId: 's1', title: 'Redes' },
       { subjectId: 's2', title: 'BD' }
@@ -44,8 +45,8 @@ describe('Unidade - progressService.getProgress', () => {
     const result = await getProgress('u1');
 
     expect(result.subjects).toEqual([
-      { subjectId: 's1', title: 'Redes', total: 5, stats: { muitoFacil: 2, facil: 1, medio: 1, dificil: 1 } },
-      { subjectId: 's2', title: 'BD', total: 1, stats: { muitoFacil: 0, facil: 0, medio: 0, dificil: 1 } }
+      { subjectId: 's1', title: 'Redes', total: 5, stats: { novo: 0, muitoFacil: 2, facil: 1, medio: 1, dificil: 1 } },
+      { subjectId: 's2', title: 'BD', total: 1, stats: { novo: 0, muitoFacil: 0, facil: 0, medio: 0, dificil: 1 } }
     ]);
   });
 
@@ -55,17 +56,32 @@ describe('Unidade - progressService.getProgress', () => {
     const result = await getProgress('u1');
 
     expect(result.subjects).toEqual([
-      { subjectId: 's1', title: 'Vazia', total: 0, stats: { muitoFacil: 0, facil: 0, medio: 0, dificil: 0 } }
+      { subjectId: 's1', title: 'Vazia', total: 0, stats: { novo: 0, muitoFacil: 0, facil: 0, medio: 0, dificil: 0 } }
     ]);
   });
 
-  it('Rating ausente ou inválido conta como difícil', async () => {
+  it('Card novo (nunca revisado) conta como novo, não como difícil', async () => {
+    subjectRepo.getSubjectsByUserDb.mockResolvedValue([{ subjectId: 's1', title: 'A' }]);
+    cardRepo.getFlashcardsByUserDb.mockResolvedValue([
+      card('s1', null, 'new'),
+      card('s1', 1, 'new'), // rating legado em card nunca revisado
+      card('s1', 1, 'learning')
+    ]);
+
+    const result = await getProgress('u1');
+
+    expect(result.subjects[0].stats).toEqual({ novo: 2, muitoFacil: 0, facil: 0, medio: 0, dificil: 1 });
+    expect(result.subjects[0].total).toBe(3);
+  });
+
+  it('Rating ausente ou inválido em card já revisado conta como novo', async () => {
     subjectRepo.getSubjectsByUserDb.mockResolvedValue([{ subjectId: 's1', title: 'A' }]);
     cardRepo.getFlashcardsByUserDb.mockResolvedValue([card('s1', undefined), card('s1', 9)]);
 
     const result = await getProgress('u1');
 
-    expect(result.subjects[0].stats.dificil).toBe(2);
+    expect(result.subjects[0].stats.novo).toBe(2);
+    expect(result.subjects[0].stats.dificil).toBe(0);
   });
 
   it('Ignora cards de matérias inexistentes e consulta só pelo usuário', async () => {

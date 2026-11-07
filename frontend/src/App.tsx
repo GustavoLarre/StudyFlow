@@ -8,6 +8,8 @@ import { SubjectsPage } from './pages/SubjectsPage'
 import { SubjectDetailPage } from './pages/SubjectDetailPage'
 import { NoteEditorPage } from './pages/NoteEditorPage'
 import { ReviewPage } from './pages/ReviewPage'
+import { ProgressPage } from './pages/ProgressPage'
+import { TasksPage } from './pages/TasksPage'
 
 export default function App() {
   return (
@@ -22,8 +24,8 @@ export default function App() {
         <Route path="/materias/:id/notas/nova" element={<NoteEditorPage />} />
         <Route path="/materias/:id/notas/:noteId" element={<NoteEditorPage />} />
         <Route path="/revisao" element={<ReviewPage />} />
-        <Route path="/progresso" element={<h1>Progresso</h1>} />
-        <Route path="/tarefas" element={<h1>Tarefas</h1>} />
+        <Route path="/progresso" element={<ProgressPage />} />
+        <Route path="/tarefas" element={<TasksPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/materias" replace />} />

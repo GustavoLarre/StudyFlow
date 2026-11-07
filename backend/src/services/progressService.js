@@ -5,7 +5,12 @@ import { getLevelProgress } from './gamificationService.js';
 
 const CATEGORY_BY_RATING = { 4: 'muitoFacil', 3: 'facil', 2: 'medio', 1: 'dificil' };
 
-const emptyStats = () => ({ muitoFacil: 0, facil: 0, medio: 0, dificil: 0 });
+const emptyStats = () => ({ novo: 0, muitoFacil: 0, facil: 0, medio: 0, dificil: 0 });
+
+function categoryOf(card) {
+  if (card.state === 'new') return 'novo';
+  return CATEGORY_BY_RATING[card.rating] ?? 'novo';
+}
 
 export async function getProgress(userId) {
   const [user, subjects, cards] = await Promise.all([
@@ -24,7 +29,7 @@ export async function getProgress(userId) {
     const entry = bySubject.get(card.subjectId);
     if (!entry) continue;
 
-    entry.stats[CATEGORY_BY_RATING[card.rating] ?? 'dificil'] += 1;
+    entry.stats[categoryOf(card)] += 1;
     entry.total += 1;
   }
 

@@ -31,11 +31,11 @@ describe('Unidade - Defaults de flashcard', () => {
     expect(REVIEW_XP).toEqual({ again: 1, hard: 2, good: 3, easy: 4 });
   });
 
-  it('Rating inicial deve ser 1 (difícil) e ease inicial 2.5', () => {
-    expect(INITIAL_RATING).toBe(1);
-    expect(INITIAL_EASE_FACTOR).toBe(2.5);
+  it('Card novo não tem rating (ainda não foi avaliado) e ease inicial 2.5', () => {
+    expect(INITIAL_RATING).toBeNull()
+    expect(INITIAL_EASE_FACTOR).toBe(2.5)
   });
-
+  
   describe('buildNewFlashcard', () => {
     const base = { userId: 'u1', subjectId: 's1', front: 'P?', back: 'R.' };
 
