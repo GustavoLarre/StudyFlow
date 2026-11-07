@@ -1,9 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ApiError } from '../services/apiClient'
-import { notesApi, MAX_NOTE_CHARS, type GenerationResult, type Note, type NotesApi } from '../services/notesApi'
+import { notesApi, type GenerationResult, type Note, type NotesApi } from '../services/notesApi'
 import styles from './NotesTab.module.css'
+
+type NotesTabApi = Pick<NotesApi, 'list' | 'remove' | 'generate'>
 
 const PREVIEW = 120
 
@@ -21,14 +23,10 @@ function generationError(error: unknown) {
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : 'Não foi possível concluir. Tente novamente.'
 
-export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: string; notes?: NotesApi }) {
+export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: string; notes?: NotesTabApi }) {
   const [items, setItems] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [contentError, setContentError] = useState('')
   const [toDelete, setToDelete] = useState<Note | null>(null)
   const [generatingId, setGeneratingId] = useState<string | null>(null)
   const [result, setResult] = useState<GenerationResult | null>(null)
@@ -39,35 +37,6 @@ export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: stri
       .catch((e) => setAlert(errorMessage(e)))
       .finally(() => setLoading(false))
   }, [api, subjectId])
-
-  function resetForm() {
-    setEditingId(null)
-    setTitle('')
-    setContent('')
-    setContentError('')
-  }
-
-  async function handleSave(event: FormEvent) {
-    event.preventDefault()
-    setAlert('')
-
-    if (!content.trim()) return setContentError('Informe o conteúdo da nota.')
-    if (content.length > MAX_NOTE_CHARS) return setContentError(`A nota pode ter no máximo ${MAX_NOTE_CHARS} caracteres.`)
-    setContentError('')
-
-    try {
-      if (editingId) {
-        const updated = await api.update(editingId, { title, content })
-        setItems((prev) => prev.map((n) => (n.noteId === editingId ? updated : n)))
-      } else {
-        const created = await api.create(subjectId, { title: title.trim() || undefined, content })
-        setItems((prev) => [...prev, created])
-      }
-      resetForm()
-    } catch (e) {
-      setAlert(errorMessage(e))
-    }
-  }
 
   async function handleDelete() {
     if (!toDelete) return
@@ -96,25 +65,9 @@ export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: stri
 
   return (
     <div>
-      <form className={styles.form} onSubmit={(e) => void handleSave(e)} noValidate>
-        <label htmlFor="note-title" className={styles.label}>Título da nota</label>
-        <input id="note-title" className={styles.input} value={title} onChange={(e) => setTitle(e.target.value)} />
-
-        <label htmlFor="note-content" className={styles.label}>Conteúdo da nota</label>
-        <textarea id="note-content" className={styles.textarea} rows={6} value={content}
-          onChange={(e) => setContent(e.target.value)} />
-        <div className={styles.formFooter}>
-          <span className={content.length > MAX_NOTE_CHARS ? styles.counterOver : styles.counter}>
-            {content.length}/{MAX_NOTE_CHARS}
-          </span>
-          {contentError && <span className={styles.fieldError}>{contentError}</span>}
-        </div>
-
-        <div className={styles.formActions}>
-          <button type="submit" className={styles.primary}>Salvar nota</button>
-          {editingId && <button type="button" className={styles.ghost} onClick={resetForm}>Cancelar</button>}
-        </div>
-      </form>
+      <div className={styles.header}>
+        <Link className={styles.createLink} to={`/materias/${subjectId}/notas/nova`}>Criar nota</Link>
+      </div>
 
       {alert && <p className={styles.alert} role="alert">{alert}</p>}
       {result && (
@@ -137,8 +90,9 @@ export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: stri
           {items.map((n) => (
             <li key={n.noteId} className={styles.item}>
               <div className={styles.itemText}>
-                <strong>{n.title}</strong>
+                <Link className={styles.titleLink} to={`/materias/${subjectId}/notas/${n.noteId}`}>{n.title}</Link>
                 <p>{preview(n.content)}</p>
+                <span className={styles.date}>{new Date(n.updatedAt).toLocaleDateString('pt-BR')}</span>
               </div>
               <div className={styles.itemActions}>
                 <button type="button" className={styles.primary} disabled={generatingId !== null}
@@ -146,8 +100,6 @@ export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: stri
                   onClick={() => void handleGenerate(n.noteId)}>
                   {generatingId === n.noteId ? 'Gerando...' : 'Gerar flashcards'}
                 </button>
-                <button type="button" className={styles.ghost} aria-label={`Editar ${n.title}`}
-                  onClick={() => { setEditingId(n.noteId); setTitle(n.title); setContent(n.content) }}>Editar</button>
                 <button type="button" className={styles.ghostDanger} aria-label={`Excluir ${n.title}`}
                   onClick={() => setToDelete(n)}>Excluir</button>
               </div>

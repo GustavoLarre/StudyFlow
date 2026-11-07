@@ -16,11 +16,10 @@ export default function App() {
 
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="/materias" element={<SubjectsPage />} />
-        <Route path="/materias/:id" element={<h1>Detalhe da matéria</h1>} />
+        <Route path="/materias/:id" element={<SubjectDetailPage />} />
         <Route path="/revisao" element={<h1>Revisão</h1>} />
         <Route path="/progresso" element={<h1>Progresso</h1>} />
         <Route path="/tarefas" element={<h1>Tarefas</h1>} />
-        <Route path="/materias/:id" element={<SubjectDetailPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/materias" replace />} />

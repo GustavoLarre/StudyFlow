@@ -22,6 +22,8 @@ export function createNotesApi(client: Pick<ApiClient, 'get' | 'post' | 'put' | 
   return {
     list: async (subjectId: string) =>
       (await client.get<{ notes: Note[] }>(`/subjects/${subjectId}/notes`)).notes,
+    get: async (noteId: string) =>
+      (await client.get<{ note: Note }>(`/notes/${noteId}`)).note,
     create: async (subjectId: string, data: { title?: string; content: string }) =>
       (await client.post<{ note: Note }>(`/subjects/${subjectId}/notes`, data)).note,
     update: async (noteId: string, data: { title?: string; content?: string }) =>

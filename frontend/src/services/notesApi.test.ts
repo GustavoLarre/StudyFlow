@@ -15,6 +15,14 @@ describe('notesApi', () => {
     expect(api.get).toHaveBeenCalledWith('/subjects/s1/notes')
   })
 
+  it('get devolve uma nota', async () => {
+    const { api, notes } = build()
+    api.get.mockResolvedValue({ success: true, note: { noteId: 'n1', title: 'HTTP' } })
+
+    expect((await notes.get('n1')).title).toBe('HTTP')
+    expect(api.get).toHaveBeenCalledWith('/notes/n1')
+  })
+
   it('create, update e remove chamam as rotas certas', async () => {
     const { api, notes } = build()
     api.post.mockResolvedValue({ success: true, note: { noteId: 'n1' } })
