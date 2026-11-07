@@ -1,0 +1,106 @@
+.title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+}
+
+.subtitle {
+  margin: 8px 0 28px;
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.field { display: flex; flex-direction: column; margin-bottom: 14px; }
+
+.label { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+
+.inputWrap { position: relative; }
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.input::placeholder { color: var(--text-muted); }
+.input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+
+.eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 12px;
+}
+
+.fieldError { margin-top: 4px; font-size: 12px; color: var(--danger); }
+
+.formError {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.links { display: flex; justify-content: flex-end; margin-top: -6px; font-size: 11px; }
+
+.primary {
+  display: block;
+  margin: 24px auto 0;
+  min-width: 170px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.google {
+  display: block;
+  margin: 12px auto 0;
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.google:hover:not(:disabled) { border-color: var(--accent); }
+.google:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.footer { margin: 20px 0 0; text-align: center; font-size: 11px; }
+
+.formSuccess {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--success);
+}

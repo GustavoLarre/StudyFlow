@@ -1,0 +1,28 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6vw;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg);
+}
+
+.logo {
+  position: absolute;
+  top: 32px;
+  left: 6vw;
+  width: min(22vw, 300px);
+  height: auto;
+}
+
+.card {
+  width: 406px;
+  padding: 40px 52px 32px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 60px rgba(108, 75, 255, 0.12);
+}
