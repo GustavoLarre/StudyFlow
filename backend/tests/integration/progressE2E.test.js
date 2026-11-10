@@ -41,9 +41,9 @@ describe('Integração - Progresso ponta a ponta', () => {
     const response = await request(app).get('/progress').set('Authorization', alice);
     const byTitle = Object.fromEntries(response.body.subjects.map((s) => [s.title, s]));
 
-    expect(byTitle.A.stats).toEqual({ muitoFacil: 1, facil: 1, medio: 0, dificil: 1 });
+    expect(byTitle.A.stats).toEqual({ novo: 1, muitoFacil: 1, facil: 1, medio: 0, dificil: 0 });
     expect(byTitle.A.total).toBe(3);
-    expect(byTitle.Vazia.stats).toEqual({ muitoFacil: 0, facil: 0, medio: 0, dificil: 0 });
+    expect(byTitle.Vazia.stats).toEqual({ novo:0, muitoFacil: 0, facil: 0, medio: 0, dificil: 0 });
   });
 
   it('XP total soma criação e revisão', async () => {

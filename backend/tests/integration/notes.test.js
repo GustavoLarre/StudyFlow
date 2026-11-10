@@ -48,7 +48,7 @@ describe('Integração - Geração de flashcards por IA (ponta a ponta)', () => 
     expect(response.status).toBe(201);
     expect(response.body.flashcards).toHaveLength(2);
     expect(response.body.flashcards[0]).toMatchObject({
-      source: 'ai', rating: 1, state: 'new', noteId, userId: aliceUid
+      source: 'ai', rating: null, state: 'new', noteId, userId: aliceUid
     });
     expect(response.body.gamification).toMatchObject({ gainedXp: 2, totalXp: 2 });
     expect(response.body.usage).toEqual({ count: 1, limit: 3 });

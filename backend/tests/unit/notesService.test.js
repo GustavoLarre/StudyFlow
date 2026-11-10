@@ -247,7 +247,7 @@ describe('Unidade - notesService', () => {
       expect(saved).toHaveLength(2);
       expect(saved[0]).toMatchObject({
         userId: 'u1', subjectId: 's1', noteId: 'n1',
-        source: 'ai', rating: 1, state: 'new', front: 'P1?', back: 'R1'
+        source: 'ai', rating: null, state: 'new', front: 'P1?', back: 'R1'
       });
       expect(result.flashcards).toHaveLength(2);
     });

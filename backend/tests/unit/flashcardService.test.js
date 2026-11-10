@@ -50,7 +50,7 @@ describe('Unidade - flashcardService', () => {
       expect(cardRepo.createFlashcardDb).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'u1', subjectId: 's1', noteId: null, source: 'manual',
-          front: 'P?', back: 'R.', rating: 1, state: 'new'
+          front: 'P?', back: 'R.', rating: null, state: 'new'
         })
       );
       expect(userRepo.updateUserDb).toHaveBeenCalledWith('u1', { xp: 1, level: 1 });

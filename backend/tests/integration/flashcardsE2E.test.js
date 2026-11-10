@@ -25,7 +25,7 @@ describe('Integração - Flashcards ponta a ponta', () => {
       .send({ front: 'O que é HTTP?', back: 'Protocolo de aplicação.' });
 
     expect(created.status).toBe(201);
-    expect(created.body.flashcard).toMatchObject({ source: 'manual', rating: 1, state: 'new', userId: aliceUid });
+    expect(created.body.flashcard).toMatchObject({ source: 'manual', rating: null, state: 'new', userId: aliceUid });
     expect(created.body.gamification).toMatchObject({ gainedXp: 1, totalXp: 1, level: 1 });
     expect((await db.collection('users').doc(aliceUid).get()).data().xp).toBe(1);
 
