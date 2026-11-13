@@ -1,0 +1,10 @@
+.page {
+  position: relative; min-height: 100vh; overflow: hidden;
+  display: flex; align-items: center;
+  background-size: cover; background-position: center; background-color: var(--bg);
+}
+.form { width: 40%; min-width: 420px; max-width: 520px; margin-left: 8vw; padding: 40px 0; z-index: 1; }
+.keyboard {
+  position: absolute; right: -8vw; top: 50%; transform: translateY(-50%);
+  width: 52vw; max-width: 900px; height: auto; pointer-events: none;
+}
