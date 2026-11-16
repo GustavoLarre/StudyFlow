@@ -32,7 +32,7 @@ describe('Integração - Autenticação (GET /me)', () => {
       .set('Authorization', `Bearer ${idToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.user).toMatchObject({ uid, email, plan: 'free', xp: 0, level: 1 });
+    expect(response.body.user).toMatchObject({ uid, email, plan: 'free', username: null, xp: {total: 0, level: 1} });
 
     const snap = await db.collection('users').doc(uid).get();
     expect(snap.exists).toBe(true);
@@ -49,6 +49,6 @@ describe('Integração - Autenticação (GET /me)', () => {
       .set('Authorization', `Bearer ${idToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.user.xp).toBe(50);
+    expect(response.body.user.xp.total).toBe(50);
   });
 });
