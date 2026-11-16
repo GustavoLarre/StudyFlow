@@ -12,6 +12,7 @@ import meRoutes from './routes/meRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import cors from 'cors';
+import usernameRoutes from './routes/usernameRoutes.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/', flashcardRoutes);
 app.use('/', reviewRoutes);
 app.use('/tasks', taskRoutes);
 app.use('/progress', progressRoutes);
+app.use('/usernames', usernameRoutes);
 
 app.use((req, res) => {
   return res.status(404).json({ success: false, error: 'Rota não encontrada.' });

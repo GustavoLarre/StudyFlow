@@ -38,3 +38,8 @@ export async function claimUsername(uid, username) {
     return { username, usernameChanges: nextChanges };
   });
 }
+
+export async function getUsernameOwner(username) {
+  const snap = await db.collection('usernames').doc(username).get();
+  return snap.exists ? snap.data().uid : null;
+}
