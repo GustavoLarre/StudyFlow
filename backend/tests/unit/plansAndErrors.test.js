@@ -2,7 +2,8 @@ import { jest, describe, it, expect } from '@jest/globals';
 import { PLANS, getPlanLimits } from '../../src/config/plans.js';
 import {
   AppError, ValidationError, NotFoundError,
-  PlanLimitError, ConflictError, BadGatewayError, GatewayTimeoutError
+  PlanLimitError, ConflictError, BadGatewayError, GatewayTimeoutError,
+  ForbiddenError, UsernameTakenError
 } from '../../src/errors/AppError.js';
 import { handleError } from '../../src/errors/handleError.js';
 
@@ -36,7 +37,9 @@ describe('Unidade - erros tipados', () => {
     [PlanLimitError, 403, 'PLAN_LIMIT_REACHED'],
     [ConflictError, 409, 'AI_GENERATION_IN_PROGRESS'],
     [BadGatewayError, 502, 'AI_SERVICE_UNAVAILABLE'],
-    [GatewayTimeoutError, 504, 'AI_SERVICE_TIMEOUT']
+    [GatewayTimeoutError, 504, 'AI_SERVICE_TIMEOUT'],
+    [ForbiddenError, 403, 'FORBIDDEN'],
+    [UsernameTakenError, 409, 'USERNAME_TAKEN']
   ])('%p tem status %p e code %p', (ErrorClass, status, code) => {
     const error = new ErrorClass('msg');
 

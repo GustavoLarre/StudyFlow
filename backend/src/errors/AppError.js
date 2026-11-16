@@ -42,3 +42,16 @@ export class GatewayTimeoutError extends AppError {
     super(message, 504, 'AI_SERVICE_TIMEOUT');
   }
 }
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Ação não permitida.') {
+    super(message, 403, 'FORBIDDEN');
+  }
+}
+
+export class UsernameTakenError extends ConflictError {
+  constructor(message = 'Esse nome de usuário já está em uso.') {
+    super(message);
+    this.code = 'USERNAME_TAKEN';
+  }
+}
