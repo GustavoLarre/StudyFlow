@@ -3,17 +3,22 @@ import { Link, useNavigate } from 'react-router-dom'
 import { SignupLayout } from '../components/SignupLayout'
 import { FloatingInput } from '../components/FloatingInput'
 import { register } from '../services/authService'
+import { profileApi } from '../services/profileApi'
 import { translateAuthError, validateEmail, validatePassword } from '../services/authErrors'
 import { validateUsername } from '../services/username'
 import styles from './AuthForm.module.css'
 
 interface RegisterPageProps {
   onRegister?: (email: string, password: string) => Promise<unknown>
+  onProfile?: (data: { username?: string; name?: string }) => Promise<unknown>
 }
 
 type Errors = Partial<Record<'name' | 'username' | 'email' | 'password' | 'confirm', string>>
 
-export function RegisterPage({ onRegister = register }: RegisterPageProps) {
+export function RegisterPage({
+  onRegister = register,
+  onProfile = profileApi.update,
+}: RegisterPageProps) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
@@ -38,13 +43,27 @@ export function RegisterPage({ onRegister = register }: RegisterPageProps) {
 
     setFormError('')
     setSubmitting(true)
+
     try {
-      // C3: aqui o name e o username serão enviados ao backend (PUT /me)
       await onRegister(email, password)
-      navigate('/materias')
     } catch (error) {
       setFormError(translateAuthError(error))
       setSubmitting(false)
+      return
+    }
+
+    // A conta já existe: falhas daqui em diante não são erro de cadastro
+    const finalName = name.trim()
+    try {
+      await onProfile({ username: username.trim(), name: finalName })
+      navigate('/materias')
+    } catch {
+      try {
+        await onProfile({ name: finalName })
+      } catch {
+        // o name pode ser editado depois no Perfil
+      }
+      navigate('/escolher-username')
     }
   }
 

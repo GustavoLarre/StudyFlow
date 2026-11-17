@@ -6,16 +6,18 @@ import { RegisterPage } from './RegisterPage'
 
 function setup(props: Partial<React.ComponentProps<typeof RegisterPage>> = {}) {
   const onRegister = vi.fn().mockResolvedValue(undefined)
+  const onProfile = vi.fn().mockResolvedValue(undefined)
   render(
     <MemoryRouter initialEntries={['/cadastro']}>
       <Routes>
-        <Route path="/cadastro" element={<RegisterPage onRegister={onRegister} {...props} />} />
+        <Route path="/cadastro" element={<RegisterPage onRegister={onRegister} onProfile={onProfile} {...props} />} />
         <Route path="/materias" element={<p>Área logada</p>} />
+        <Route path="/escolher-username" element={<p>Escolha o username</p>} />
         <Route path="/login" element={<p>Tela de login</p>} />
       </Routes>
     </MemoryRouter>,
   )
-  return { onRegister, user: userEvent.setup() }
+  return { onRegister, onProfile, user: userEvent.setup() }
 }
 
 const fill = async (
@@ -74,18 +76,34 @@ describe('RegisterPage', () => {
     expect(onRegister).not.toHaveBeenCalled()
   })
 
-  it('cadastra e navega para /materias', async () => {
-    const { onRegister, user } = setup()
+    it('cadastra, envia name e username e navega para /materias', async () => {
+    const { onRegister, onProfile, user } = setup()
     await fill(user, VALID)
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
+
     expect(onRegister).toHaveBeenCalledWith('a@b.com', '123456')
+    expect(onProfile).toHaveBeenCalledWith({ username: 'gustavo.dev', name: 'Gustavo' })
     expect(await screen.findByText('Área logada')).toBeInTheDocument()
   })
 
-  it('mostra erro traduzido quando o e-mail já existe', async () => {
-    const { user } = setup({ onRegister: vi.fn().mockRejectedValue({ code: 'auth/email-already-in-use' }) })
+  it('se o username falhar, salva só o name e vai para /escolher-username', async () => {
+    const onProfile = vi.fn()
+      .mockRejectedValueOnce(new Error('em uso'))
+      .mockResolvedValueOnce(undefined)
+    const { user } = setup({ onProfile })
     await fill(user, VALID)
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
+
+    expect(await screen.findByText('Escolha o username')).toBeInTheDocument()
+    expect(onProfile).toHaveBeenNthCalledWith(2, { name: 'Gustavo' })
+  })
+
+  it('não chama a API de perfil quando a criação da conta falha', async () => {
+    const { onProfile, user } = setup({ onRegister: vi.fn().mockRejectedValue({ code: 'auth/email-already-in-use' }) })
+    await fill(user, VALID)
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }))
+
     expect(await screen.findByText('Este e-mail já está cadastrado.')).toBeInTheDocument()
+    expect(onProfile).not.toHaveBeenCalled()
   })
 })
