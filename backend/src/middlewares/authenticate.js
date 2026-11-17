@@ -29,6 +29,7 @@ export function createAuthenticate({ verifyToken }) {
 
     try {
       req.user = await ensureUser({ uid: decoded.uid, email: decoded.email ?? null });
+      req.auth = decoded;
     } catch (error) {
       console.error('Falha ao carregar o usuário autenticado:', error.message);
       return res.status(500).json({

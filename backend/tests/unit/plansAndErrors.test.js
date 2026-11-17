@@ -3,7 +3,7 @@ import { PLANS, getPlanLimits } from '../../src/config/plans.js';
 import {
   AppError, ValidationError, NotFoundError,
   PlanLimitError, ConflictError, BadGatewayError, GatewayTimeoutError,
-  ForbiddenError, UsernameTakenError
+  ForbiddenError, UsernameTakenError, ReauthRequiredError
 } from '../../src/errors/AppError.js';
 import { handleError } from '../../src/errors/handleError.js';
 
@@ -39,7 +39,8 @@ describe('Unidade - erros tipados', () => {
     [BadGatewayError, 502, 'AI_SERVICE_UNAVAILABLE'],
     [GatewayTimeoutError, 504, 'AI_SERVICE_TIMEOUT'],
     [ForbiddenError, 403, 'FORBIDDEN'],
-    [UsernameTakenError, 409, 'USERNAME_TAKEN']
+    [UsernameTakenError, 409, 'USERNAME_TAKEN'],
+    [ReauthRequiredError, 401, 'REAUTH_REQUIRED']
   ])('%p tem status %p e code %p', (ErrorClass, status, code) => {
     const error = new ErrorClass('msg');
 

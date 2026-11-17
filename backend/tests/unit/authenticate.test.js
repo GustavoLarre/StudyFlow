@@ -79,6 +79,17 @@ describe('Unidade - middleware authenticate', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
+  it('expõe o token decodificado em req.auth', async () => {
+    const decoded = { uid: 'u1', email: 'a@b.com', auth_time: 1700000000 };
+    verifyToken.mockResolvedValue(decoded);
+    ensureUser.mockResolvedValue({ uid: 'u1' });
+    const req = { headers: { authorization: 'Bearer token_bom' } };
+
+    await authenticate(req, buildRes(), next);
+
+    expect(req.auth).toEqual(decoded);
+  });
+
   it('Deve responder 500 quando falha ao buscar ou criar o usuário', async () => {
     verifyToken.mockResolvedValue({ uid: 'u1', email: 'a@b.com' });
     ensureUser.mockRejectedValue(new Error('Firestore indisponível'));

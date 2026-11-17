@@ -55,3 +55,9 @@ export class UsernameTakenError extends ConflictError {
     this.code = 'USERNAME_TAKEN';
   }
 }
+
+export class ReauthRequiredError extends AppError {
+  constructor(message = 'Confirme sua identidade fazendo login novamente.') {
+    super(message, 401, 'REAUTH_REQUIRED');
+  }
+}
