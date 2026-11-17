@@ -11,6 +11,7 @@ import { NoteEditorPage } from './pages/NoteEditorPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { ProgressPage } from './pages/ProgressPage'
 import { TasksPage } from './pages/TasksPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { ProfileProvider } from './profile/ProfileContext'
 import { UsernameGate, NeedsUsernameRoute } from './profile/guards'
 
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/revisao" element={<ReviewPage />} />
           <Route path="/progresso" element={<ProgressPage />} />
           <Route path="/tarefas" element={<TasksPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
         </Route>
       </Route>
 

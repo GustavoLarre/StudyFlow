@@ -7,6 +7,7 @@ const LINKS = [
   { to: '/revisao', label: 'Revisão' },
   { to: '/progresso', label: 'Progresso' },
   { to: '/tarefas', label: 'Tarefas' },
+  { to: '/perfil', label: 'Perfil' },
 ]
 
 export function AppLayout({ onLogout = logout }: { onLogout?: () => Promise<unknown> }) {

@@ -1,0 +1,15 @@
+.page { max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.heading { font-family: var(--font-pixel); font-size: 22px; color: var(--accent-soft); margin: 0 0 8px; }
+.card { padding: 20px 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.card h2 { margin: 0; font-size: 18px; }
+.label { font-size: 13px; font-weight: 500; }
+.input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+.input:disabled { opacity: 0.6; }
+.muted { margin: 0; color: var(--text-muted); font-size: 13px; }
+.bar { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.barFill { height: 100%; background: var(--accent); }
+.primary { align-self: flex-start; padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
+.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.ghost { align-self: flex-start; padding: 10px 18px; border-radius: 10px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; }
+.error { color: var(--danger); font-size: 13px; }
+.ok { color: var(--success); font-size: 13px; }
