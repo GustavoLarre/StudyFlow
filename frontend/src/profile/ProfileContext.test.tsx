@@ -8,6 +8,7 @@ import type { Profile } from '../services/profileApi'
 
 const profile = (username: string | null): Profile => ({
   uid: 'u1', email: 'a@b.com', plan: 'free', username, name: null,
+  usernameChanged: false, // <--- Adicionado aqui
   xp: { total: 0, level: 1, currentLevelXp: 0, nextLevelXp: 100 },
 })
 

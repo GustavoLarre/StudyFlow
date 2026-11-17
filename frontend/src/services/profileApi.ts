@@ -7,6 +7,7 @@ export interface Profile {
   plan: string
   username: string | null
   name: string | null
+  usernameChanged: boolean // <--- Adicionado aqui
   xp: { total: number; level: number; currentLevelXp: number; nextLevelXp: number }
 }
 

@@ -29,6 +29,7 @@ export async function getProfile(uid) {
     plan: user.plan,
     username: user.username ?? null,
     name: user.name ?? null,
+    usernameChanged: (user.usernameChanges ?? 0) >= 1,
     xp: { total: user.xp ?? 0, level, currentLevelXp, nextLevelXp }
   };
 }

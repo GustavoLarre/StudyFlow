@@ -31,8 +31,17 @@ describe('Unidade - profileService', () => {
 
     expect(profile).toEqual({
       uid: 'u1', email: 'a@b.com', plan: 'free', username: 'gustavo', name: 'Gustavo',
+      usernameChanged: false,
       xp: { total: 120, level: 2, currentLevelXp: 20, nextLevelXp: 200 }
     });
+  });
+
+  it('getProfile informa se o username já foi trocado', async () => {
+    userRepo.getUserByUidDb.mockResolvedValue({ ...USER, usernameChanges: 1 });
+    expect((await getProfile('u1')).usernameChanged).toBe(true);
+
+    userRepo.getUserByUidDb.mockResolvedValue({ ...USER, usernameChanges: 0 });
+    expect((await getProfile('u1')).usernameChanged).toBe(false);
   });
 
   it('getProfile usa null quando não há username nem name', async () => {
@@ -42,6 +51,7 @@ describe('Unidade - profileService', () => {
 
     expect(profile.username).toBeNull();
     expect(profile.name).toBeNull();
+    expect(profile.usernameChanged).toBe(false);
   });
 
   it('updateProfile exige username ou name', async () => {
