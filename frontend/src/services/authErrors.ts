@@ -29,3 +29,24 @@ export function validatePassword(value: string): string | null {
   if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres.'
   return null
 }
+
+export function validateUsername(value: string): string | null {
+  const username = value.trim()
+  if (!username) return 'Informe o nome de usuário.'
+  if (username.length < 3 || username.length > 30) return 'O nome de usuário deve ter de 3 a 30 caracteres.'
+  if (!/^[a-zA-Z0-9._]+$/.test(username)) return 'Use apenas letras, números, ponto e sublinhado.'
+  if (/^\d+$/.test(username)) return 'O nome de usuário não pode ter só números.'
+  return null
+}
+
+export function suggestUsername(fullName: string): string {
+  const normalized = fullName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9._]/g, '')
+
+  return normalized.slice(0, 30)
+}

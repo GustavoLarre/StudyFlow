@@ -4,16 +4,8 @@ import { SignupLayout } from '../components/SignupLayout'
 import { FloatingInput } from '../components/FloatingInput'
 import { register } from '../services/authService'
 import { translateAuthError, validateEmail, validatePassword } from '../services/authErrors'
+import { validateUsername } from '../services/username'
 import styles from './AuthForm.module.css'
-
-export function validateUsername(value: string): string | null {
-  const username = value.trim()
-  if (!username) return 'Informe o nome de usuário.'
-  if (username.length < 3 || username.length > 30) return 'O nome de usuário deve ter de 3 a 30 caracteres.'
-  if (!/^[a-zA-Z0-9._]+$/.test(username)) return 'Use apenas letras, números, ponto e sublinhado.'
-  if (/^\d+$/.test(username)) return 'O nome de usuário não pode ter só números.'
-  return null
-}
 
 interface RegisterPageProps {
   onRegister?: (email: string, password: string) => Promise<unknown>
@@ -47,7 +39,7 @@ export function RegisterPage({ onRegister = register }: RegisterPageProps) {
     setFormError('')
     setSubmitting(true)
     try {
-      // Etapa C: aqui o username e o name serão enviados ao backend (PUT /me)
+      // C3: aqui o name e o username serão enviados ao backend (PUT /me)
       await onRegister(email, password)
       navigate('/materias')
     } catch (error) {

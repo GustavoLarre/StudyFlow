@@ -4,6 +4,7 @@ import { AppLayout } from './components/AppLayout'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ChooseUsernamePage } from './pages/ChooseUsernamePage'
 import { SubjectsPage } from './pages/SubjectsPage'
 import { SubjectDetailPage } from './pages/SubjectDetailPage'
 import { NoteEditorPage } from './pages/NoteEditorPage'
@@ -23,7 +24,7 @@ export default function App() {
       <Route element={<ProtectedRoute><ProfileProvider><Outlet /></ProfileProvider></ProtectedRoute>}>
         <Route
           path="/escolher-username"
-          element={<NeedsUsernameRoute><h1>Escolher username</h1></NeedsUsernameRoute>}
+          element={<NeedsUsernameRoute><ChooseUsernamePage /></NeedsUsernameRoute>}
         />
 
         <Route element={<UsernameGate><AppLayout /></UsernameGate>}>
