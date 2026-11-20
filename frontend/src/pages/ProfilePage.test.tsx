@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ProfilePage } from './ProfilePage'
@@ -116,6 +116,35 @@ describe('ProfilePage', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao salvar.')
+  })
+
+    it('mostra o resumo da conta numa coluna lateral, com Sair', async () => {
+    setup()
+    await screen.findByText('@gustavo')
+
+    const side = screen.getByRole('complementary', { name: 'Resumo do perfil' })
+    expect(within(side).getByText('Gustavo')).toBeInTheDocument()
+    expect(within(side).getByText('@gustavo')).toBeInTheDocument()
+    expect(within(side).getByText('a@b.com')).toBeInTheDocument()
+    expect(within(side).getByText('Nível 2')).toBeInTheDocument()
+    expect(within(side).getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+  })
+
+  it('agrupa nome e username em Informações da conta', async () => {
+    setup()
+    await screen.findByText('@gustavo')
+
+    const group = screen.getByRole('region', { name: 'Informações da conta' })
+    expect(within(group).getByLabelText('Nome')).toBeInTheDocument()
+    expect(within(group).getByLabelText('Nome de usuário')).toBeInTheDocument()
+  })
+
+  it('a zona de perigo é uma seção própria com o botão Apagar conta', async () => {
+    setup()
+    await screen.findByText('@gustavo')
+
+    const danger = screen.getByRole('region', { name: 'Zona de perigo' })
+    expect(within(danger).getByRole('button', { name: 'Apagar conta' })).toBeInTheDocument()
   })
 
   it('Sair chama o logout', async () => {

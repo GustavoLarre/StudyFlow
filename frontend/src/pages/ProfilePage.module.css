@@ -1,15 +1,48 @@
-.page { max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
-.heading { font-family: var(--font-pixel); font-size: 22px; color: var(--accent-soft); margin: 0 0 8px; }
-.card { padding: 20px 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-.card h2 { margin: 0; font-size: 18px; }
-.label { font-size: 13px; font-weight: 500; }
-.input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
-.input:disabled { opacity: 0.6; }
-.muted { margin: 0; color: var(--text-muted); font-size: 13px; }
-.bar { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.page { max-width: 1000px; margin: 0 auto; }
+.heading { margin: 0 0 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); font-size: 28px; }
+
+.layout { display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: start; }
+
+/* Coluna lateral */
+.side { display: flex; flex-direction: column; gap: 4px; }
+.name { margin: 0; font-size: 26px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.username { margin: 0; font-size: 18px; font-weight: 300; color: var(--text-muted); }
+.muted { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.divider { height: 1px; margin: 16px 0; background: var(--border); }
+.levelTitle { margin: 0; font-size: 18px; }
+.xpTotal { margin: 4px 0 8px; font-size: 14px; }
+.bar { height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
 .barFill { height: 100%; background: var(--accent); }
-.primary { align-self: flex-start; padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
-.primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.ghost { align-self: flex-start; padding: 10px 18px; border-radius: 10px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; }
-.error { color: var(--danger); font-size: 13px; }
-.ok { color: var(--success); font-size: 13px; }
+
+/* Coluna principal */
+.main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.group { display: flex; flex-direction: column; gap: 24px; }
+.groupTitle { margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 400; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 14px; font-weight: 600; }
+.input {
+  width: 100%; max-width: 420px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+}
+.input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.input:disabled { opacity: 0.6; cursor: not-allowed; }
+.helper { margin: 0; font-size: 12px; color: var(--text-muted); }
+.ok { color: var(--success); font-size: 13px; margin: 0; }
+.error { color: var(--danger); font-size: 13px; margin: 0; }
+
+.primary { padding: 8px 16px; border: none; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.ghost { padding: 8px 16px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; }
+.ghost:hover { background: var(--surface-2); }
+
+/* Zona de perigo */
+.danger { border: 1px solid rgba(255, 90, 110, 0.5); border-radius: 10px; overflow: hidden; }
+.dangerTitle { margin: 0; padding: 12px 16px; font-size: 16px; color: var(--danger); border-bottom: 1px solid rgba(255, 90, 110, 0.5); }
+.dangerRow { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px; }
+.dangerRow p { margin-top: 4px; }
+.dangerBtn {
+  flex-shrink: 0; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  background: transparent; border: 1px solid var(--danger); color: var(--danger);
+}
+.dangerBtn:hover { background: var(--danger); color: #fff; }

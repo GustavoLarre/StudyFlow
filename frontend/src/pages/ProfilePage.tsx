@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useProfile } from '../profile/ProfileContext'
 import { profileApi as defaultApi, type ProfileApi } from '../services/profileApi'
 import {
@@ -41,11 +41,9 @@ export function ProfilePage({
   const [notice, setNotice] = useState('')
   const [alert, setAlert] = useState('')
   const [showDelete, setShowDelete] = useState(false)
-  const initialized = useRef(false)
 
   useEffect(() => {
-    if (profile && !initialized.current) {
-      initialized.current = true
+    if (profile) {
       setName(profile.name ?? '')
       setUsername(profile.username ?? '')
     }
@@ -112,52 +110,75 @@ export function ProfilePage({
     <section className={styles.page}>
       <h1 className={styles.heading}>Perfil</h1>
 
-      <div className={styles.card}>
-        <h2>{profile.name || 'Sem nome'}</h2>
-        <p className={styles.muted}>@{profile.username}</p>
-        <p className={styles.muted}>{profile.email}</p>
-      </div>
+      <div className={styles.layout}>
+        <aside className={styles.side} aria-label="Resumo do perfil">
+          <h2 className={styles.name}>{profile.name || 'Sem nome'}</h2>
+          <p className={styles.username}>@{profile.username}</p>
+          <p className={styles.muted}>{profile.email}</p>
 
-      <div className={styles.card}>
-        <h2>Nível {xp.level}</h2>
-        <p>XP total: {xp.total}</p>
-        <div className={styles.bar} role="progressbar" aria-valuenow={xp.currentLevelXp}
-          aria-valuemin={0} aria-valuemax={xp.nextLevelXp}>
-          <div className={styles.barFill} style={{ width: `${pct}%` }} />
+          <div className={styles.divider} />
+
+          <h3 className={styles.levelTitle}>Nível {xp.level}</h3>
+          <p className={styles.xpTotal}>XP total: {xp.total}</p>
+          <div className={styles.bar} role="progressbar" aria-valuenow={xp.currentLevelXp}
+            aria-valuemin={0} aria-valuemax={xp.nextLevelXp}>
+            <div className={styles.barFill} style={{ width: `${pct}%` }} />
+          </div>
+          <p className={styles.muted}>{xp.currentLevelXp} / {xp.nextLevelXp} XP</p>
+
+          <div className={styles.divider} />
+
+          <button type="button" className={styles.ghost} onClick={() => void onLogout()}>Sair</button>
+        </aside>
+
+        <div className={styles.main}>
+          {notice && <p className={styles.ok} role="status">{notice}</p>}
+          {alert && <p className={styles.error} role="alert">{alert}</p>}
+
+          <section className={styles.group} aria-labelledby="account-title">
+            <h2 id="account-title" className={styles.groupTitle}>Informações da conta</h2>
+
+            <div className={styles.field}>
+              <label htmlFor="profile-name" className={styles.label}>Nome</label>
+              <input id="profile-name" className={styles.input} value={name}
+                onChange={(e) => setName(e.target.value)} />
+              {nameError && <span className={styles.error}>{nameError}</span>}
+              <div>
+                <button type="button" className={styles.primary} onClick={() => void saveName()}>Salvar nome</button>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label htmlFor="profile-username" className={styles.label}>Nome de usuário</label>
+              <input id="profile-username" className={styles.input} value={username}
+                disabled={profile.usernameChanged} onChange={(e) => setUsername(e.target.value)} />
+              {profile.usernameChanged ? (
+                <p className={styles.helper}>Você já alterou seu nome de usuário e não pode mudar de novo.</p>
+              ) : (
+                <>
+                  <p className={styles.helper}>Você pode alterar o nome de usuário apenas uma vez.</p>
+                  {status.kind === 'available' && <span className={styles.ok} role="status">Disponível</span>}
+                  {status.kind === 'error' && <span className={styles.error}>{status.message}</span>}
+                  <div>
+                    <button type="button" className={styles.primary} disabled={status.kind !== 'available'}
+                      onClick={() => void saveUsername()}>Alterar nome de usuário</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className={styles.danger} aria-labelledby="danger-title">
+            <h2 id="danger-title" className={styles.dangerTitle}>Zona de perigo</h2>
+            <div className={styles.dangerRow}>
+              <div>
+                <strong>Excluir esta conta</strong>
+                <p className={styles.helper}>Remove para sempre sua conta, matérias, notas, flashcards e tarefas.</p>
+              </div>
+              <button type="button" className={styles.dangerBtn} onClick={() => setShowDelete(true)}>Apagar conta</button>
+            </div>
+          </section>
         </div>
-        <p className={styles.muted}>{xp.currentLevelXp} / {xp.nextLevelXp} XP</p>
-      </div>
-
-      <div className={styles.card}>
-        <label htmlFor="profile-name" className={styles.label}>Nome</label>
-        <input id="profile-name" className={styles.input} value={name} onChange={(e) => setName(e.target.value)} />
-        {nameError && <span className={styles.error}>{nameError}</span>}
-        <button type="button" className={styles.primary} onClick={() => void saveName()}>Salvar nome</button>
-      </div>
-
-      <div className={styles.card}>
-        <label htmlFor="profile-username" className={styles.label}>Nome de usuário</label>
-        <input id="profile-username" className={styles.input} value={username}
-          disabled={profile.usernameChanged} onChange={(e) => setUsername(e.target.value)} />
-        {profile.usernameChanged ? (
-          <p className={styles.muted}>Você já alterou seu nome de usuário e não pode mudar de novo.</p>
-        ) : (
-          <>
-            <p className={styles.muted}>Você pode alterar o nome de usuário apenas uma vez.</p>
-            {status.kind === 'available' && <span className={styles.ok} role="status">Disponível</span>}
-            {status.kind === 'error' && <span className={styles.error}>{status.message}</span>}
-            <button type="button" className={styles.primary} disabled={status.kind !== 'available'}
-              onClick={() => void saveUsername()}>Alterar nome de usuário</button>
-          </>
-        )}
-      </div>
-
-      {notice && <p className={styles.ok} role="status">{notice}</p>}
-      {alert && <p className={styles.error} role="alert">{alert}</p>}
-
-      <div className={styles.card}>
-        <h2>Zona de perigo</h2>
-        <button type="button" className={styles.ghost} onClick={() => setShowDelete(true)}>Apagar conta</button>
       </div>
 
       {showDelete && (
@@ -169,8 +190,6 @@ export function ProfilePage({
           onDeleted={() => void onDeleted()}
         />
       )}
-
-      <button type="button" className={styles.ghost} onClick={() => void onLogout()}>Sair</button>
     </section>
   )
 }
