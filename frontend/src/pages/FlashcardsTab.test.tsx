@@ -25,6 +25,8 @@ function setup(initial: Flashcard[] = [card()]) {
   return { cards, user: userEvent.setup() }
 }
 
+const EMPTY = 'Esta matéria ainda não tem flashcards.'
+
 describe('FlashcardsTab', () => {
   it('lista cards com selo de origem, mais recentes primeiro', async () => {
     setup([
@@ -40,52 +42,146 @@ describe('FlashcardsTab', () => {
 
   it('estado vazio', async () => {
     setup([])
-    expect(await screen.findByText('Esta matéria ainda não tem flashcards.')).toBeInTheDocument()
+    expect(await screen.findByText(EMPTY)).toBeInTheDocument()
   })
 
-  it('cria card manual e mostra +1 XP', async () => {
-    const { cards, user } = setup([])
-    await screen.findByText('Esta matéria ainda não tem flashcards.')
+  it('frente e verso só aparecem no popup depois de clicar em Criar flashcard', async () => {
+    const { user } = setup([])
+    await screen.findByText(EMPTY)
 
-    await user.type(screen.getByLabelText('Frente'), '  Pergunta?  ')
-    await user.type(screen.getByLabelText('Verso'), 'Resposta.')
+    expect(screen.queryByLabelText('Frente')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByLabelText('Frente')).toHaveValue('')
+    expect(within(dialog).getByLabelText('Verso')).toHaveValue('')
+  })
+
+  it('cria card manual pelo popup, fecha e mostra +1 XP', async () => {
+    const { cards, user } = setup([])
+    await screen.findByText(EMPTY)
+
+    await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Frente'), '  Pergunta?  ')
+    await user.type(within(dialog).getByLabelText('Verso'), 'Resposta.')
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
 
     expect(cards.create).toHaveBeenCalledWith('s1', { front: 'Pergunta?', back: 'Resposta.' })
     expect(await screen.findByText('Pergunta?')).toBeInTheDocument()
     expect(screen.getByText('+1 XP')).toBeInTheDocument()
-    expect(screen.getByLabelText('Frente')).toHaveValue('')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('valida frente e verso vazios e limite de 500', async () => {
+  it('valida frente e verso vazios e limite de 500 no popup de criação', async () => {
     const { cards, user } = setup([])
-    await screen.findByText('Esta matéria ainda não tem flashcards.')
+    await screen.findByText(EMPTY)
 
     await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
-    expect(screen.getByText('Informe a frente.')).toBeInTheDocument()
-    expect(screen.getByText('Informe o verso.')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    expect(within(dialog).getByText('Informe a frente.')).toBeInTheDocument()
+    expect(within(dialog).getByText('Informe o verso.')).toBeInTheDocument()
 
-    await user.click(screen.getByLabelText('Frente'))
+    await user.click(within(dialog).getByLabelText('Frente'))
     await user.paste('a'.repeat(501))
-    await user.type(screen.getByLabelText('Verso'), 'ok')
-    await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
-    expect(screen.getByText('A frente pode ter no máximo 500 caracteres.')).toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText('Verso'), 'ok')
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    expect(within(dialog).getByText('A frente pode ter no máximo 500 caracteres.')).toBeInTheDocument()
     expect(cards.create).not.toHaveBeenCalled()
   })
 
-  it('edita um card', async () => {
+  it('cancelar a criação fecha o popup sem criar', async () => {
+    const { cards, user } = setup([])
+    await screen.findByText(EMPTY)
+
+    await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(cards.create).not.toHaveBeenCalled()
+  })
+
+  it('erro do backend na criação aparece no popup, que continua aberto', async () => {
+    const { cards, user } = setup([])
+    cards.create.mockRejectedValue(new ApiError('Matéria não encontrada.', 404))
+    await screen.findByText(EMPTY)
+
+    await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Frente'), 'P')
+    await user.type(within(dialog).getByLabelText('Verso'), 'R')
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Matéria não encontrada.')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('o lápis abre o popup de edição preenchido', async () => {
+    const { user } = setup()
+    await screen.findByText('O que é HTTP?')
+
+    await user.click(screen.getByRole('button', { name: 'Editar O que é HTTP?' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Editar flashcard')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Frente')).toHaveValue('O que é HTTP?')
+    expect(within(dialog).getByLabelText('Verso')).toHaveValue('Protocolo de aplicação.')
+  })
+
+  it('edita um card pelo popup e fecha', async () => {
     const { cards, user } = setup()
     await screen.findByText('O que é HTTP?')
 
     await user.click(screen.getByRole('button', { name: 'Editar O que é HTTP?' }))
-    const front = screen.getByLabelText('Frente')
-    expect(front).toHaveValue('O que é HTTP?')
+    const dialog = screen.getByRole('dialog')
+    const front = within(dialog).getByLabelText('Frente')
     await user.clear(front)
     await user.type(front, 'O que é TCP?')
-    await user.click(screen.getByRole('button', { name: 'Salvar flashcard' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
 
     expect(cards.update).toHaveBeenCalledWith('c1', { front: 'O que é TCP?', back: 'Protocolo de aplicação.' })
     expect(await screen.findByText('O que é TCP?')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('cancelar a edição fecha o popup sem salvar', async () => {
+    const { cards, user } = setup()
+    await screen.findByText('O que é HTTP?')
+
+    await user.click(screen.getByRole('button', { name: 'Editar O que é HTTP?' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(cards.update).not.toHaveBeenCalled()
+  })
+
+  it('valida o popup de edição: frente vazia não salva', async () => {
+    const { cards, user } = setup()
+    await screen.findByText('O que é HTTP?')
+
+    await user.click(screen.getByRole('button', { name: 'Editar O que é HTTP?' }))
+    const dialog = screen.getByRole('dialog')
+    await user.clear(within(dialog).getByLabelText('Frente'))
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+
+    expect(within(dialog).getByText('Informe a frente.')).toBeInTheDocument()
+    expect(cards.update).not.toHaveBeenCalled()
+  })
+
+  it('erro do backend na edição aparece no popup, que continua aberto', async () => {
+    const { cards, user } = setup()
+    cards.update.mockRejectedValue(new ApiError('Flashcard não encontrado.', 404))
+    await screen.findByText('O que é HTTP?')
+
+    await user.click(screen.getByRole('button', { name: 'Editar O que é HTTP?' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Flashcard não encontrado.')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('exclui só depois da confirmação', async () => {
@@ -98,17 +194,5 @@ describe('FlashcardsTab', () => {
 
     expect(cards.remove).toHaveBeenCalledWith('c1')
     expect(screen.queryByText('O que é HTTP?')).not.toBeInTheDocument()
-  })
-
-  it('mostra o erro do backend ao falhar', async () => {
-    const { cards, user } = setup([])
-    cards.create.mockRejectedValue(new ApiError('Matéria não encontrada.', 404))
-    await screen.findByText('Esta matéria ainda não tem flashcards.')
-
-    await user.type(screen.getByLabelText('Frente'), 'P')
-    await user.type(screen.getByLabelText('Verso'), 'R')
-    await user.click(screen.getByRole('button', { name: 'Criar flashcard' }))
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Matéria não encontrada.')
   })
 })

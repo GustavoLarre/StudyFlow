@@ -1,0 +1,23 @@
+.backdrop {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.7); z-index: 50;
+}
+.dialog {
+  width: 520px; max-width: calc(100vw - 48px); padding: 28px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.title { margin: 0 0 8px; font-size: 20px; }
+.label { font-size: 13px; font-weight: 500; }
+.textarea {
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); resize: vertical;
+}
+.textarea:focus { outline: 2px solid var(--accent); }
+.fieldError, .alert { color: var(--danger); font-size: 12px; margin: 0; }
+.actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+.cancel, .save { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; }
+.cancel { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.save { background: var(--accent); color: #fff; }
+.save:hover { background: var(--accent-hover); }
+.save:disabled { opacity: 0.6; cursor: default; }

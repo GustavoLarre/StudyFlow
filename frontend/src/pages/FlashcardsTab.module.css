@@ -1,16 +1,6 @@
-.form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-.label { font-size: 13px; font-weight: 500; }
-.textarea {
-  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface-2); color: var(--text); resize: vertical;
-}
-.textarea:focus { outline: 2px solid var(--accent); }
-.fieldError { color: var(--danger); font-size: 12px; }
-.actions { display: flex; gap: 10px; }
+.toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
 .primary { padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
 .primary:hover { background: var(--accent-hover); }
-.ghost, .ghostDanger { padding: 8px 14px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; }
-.ghostDanger { color: var(--danger); }
 .alert { color: var(--danger); }
 .notice { color: var(--success); }
 .empty { color: var(--text-muted); }
@@ -21,3 +11,9 @@
 .badge, .badgeAi { align-self: flex-start; padding: 2px 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border); color: var(--text-muted); }
 .badgeAi { border-color: var(--accent); color: var(--accent-soft); }
 .itemActions { display: flex; gap: 8px; }
+.iconBtn {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border-radius: 10px; background: transparent; border: 1px solid var(--border); cursor: pointer;
+}
+.iconBtn:hover { background: var(--surface-2); border-color: var(--accent); }
+.iconBtn img { width: 20px; height: 20px; object-fit: contain; }

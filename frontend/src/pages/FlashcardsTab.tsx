@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import {
-  flashcardsApi, MAX_CARD_TEXT, type Flashcard, type FlashcardsApi,
-} from '../services/flashcardsApi'
+import { FlashcardDialog } from '../components/FlashcardDialog'
+import editIcon from '../assets/tarefas-editar.png'
+import deleteIcon from '../assets/tarefas-excluir.png'
+import { flashcardsApi, type Flashcard, type FlashcardsApi } from '../services/flashcardsApi'
 import styles from './FlashcardsTab.module.css'
 
 const errorMessage = (error: unknown) =>
@@ -10,6 +11,8 @@ const errorMessage = (error: unknown) =>
 
 const newestFirst = (list: Flashcard[]) =>
   [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+type DialogState = { mode: 'create' } | { mode: 'edit'; card: Flashcard } | null
 
 export function FlashcardsTab({
   subjectId,
@@ -22,10 +25,7 @@ export function FlashcardsTab({
   const [loading, setLoading] = useState(true)
   const [alert, setAlert] = useState('')
   const [notice, setNotice] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [front, setFront] = useState('')
-  const [back, setBack] = useState('')
-  const [errors, setErrors] = useState<{ front?: string; back?: string }>({})
+  const [dialog, setDialog] = useState<DialogState>(null)
   const [toDelete, setToDelete] = useState<Flashcard | null>(null)
 
   useEffect(() => {
@@ -35,49 +35,25 @@ export function FlashcardsTab({
       .finally(() => setLoading(false))
   }, [api, subjectId])
 
-  function resetForm() {
-    setEditingId(null)
-    setFront('')
-    setBack('')
-    setErrors({})
+  // Os dois handlers lançam o erro: o popup o mostra e continua aberto.
+  async function handleCreate(data: { front: string; back: string }) {
+    const { flashcard, gamification } = await api.create(subjectId, data)
+    setItems((prev) => newestFirst([flashcard, ...prev]))
+    setNotice(gamification ? `+${gamification.gainedXp} XP` : '')
+    setDialog(null)
   }
 
-  function validate() {
-    const next: { front?: string; back?: string } = {}
-    if (!front.trim()) next.front = 'Informe a frente.'
-    else if (front.trim().length > MAX_CARD_TEXT) next.front = `A frente pode ter no máximo ${MAX_CARD_TEXT} caracteres.`
-    if (!back.trim()) next.back = 'Informe o verso.'
-    else if (back.trim().length > MAX_CARD_TEXT) next.back = `O verso pode ter no máximo ${MAX_CARD_TEXT} caracteres.`
-    setErrors(next)
-    return !next.front && !next.back
-  }
-
-  async function handleSave(event: FormEvent) {
-    event.preventDefault()
-    setAlert('')
-    setNotice('')
-    if (!validate()) return
-
-    const data = { front: front.trim(), back: back.trim() }
-    try {
-      if (editingId) {
-        const updated = await api.update(editingId, data)
-        setItems((prev) => prev.map((c) => (c.flashcardId === editingId ? updated : c)))
-      } else {
-        const { flashcard, gamification } = await api.create(subjectId, data)
-        setItems((prev) => newestFirst([flashcard, ...prev]))
-        if (gamification) setNotice(`+${gamification.gainedXp} XP`)
-      }
-      resetForm()
-    } catch (e) {
-      setAlert(errorMessage(e))
-    }
+  async function handleUpdate(id: string, data: { front: string; back: string }) {
+    const updated = await api.update(id, data)
+    setItems((prev) => prev.map((c) => (c.flashcardId === id ? updated : c)))
+    setDialog(null)
   }
 
   async function handleDelete() {
     if (!toDelete) return
     const { flashcardId } = toDelete
     setToDelete(null)
+    setAlert('')
     try {
       await api.remove(flashcardId)
       setItems((prev) => prev.filter((c) => c.flashcardId !== flashcardId))
@@ -88,24 +64,12 @@ export function FlashcardsTab({
 
   return (
     <div>
-      <form className={styles.form} onSubmit={(e) => void handleSave(e)} noValidate>
-        <label htmlFor="card-front" className={styles.label}>Frente</label>
-        <textarea id="card-front" className={styles.textarea} rows={2} value={front}
-          onChange={(e) => setFront(e.target.value)} />
-        {errors.front && <span className={styles.fieldError}>{errors.front}</span>}
-
-        <label htmlFor="card-back" className={styles.label}>Verso</label>
-        <textarea id="card-back" className={styles.textarea} rows={2} value={back}
-          onChange={(e) => setBack(e.target.value)} />
-        {errors.back && <span className={styles.fieldError}>{errors.back}</span>}
-
-        <div className={styles.actions}>
-          <button type="submit" className={styles.primary}>
-            {editingId ? 'Salvar flashcard' : 'Criar flashcard'}
-          </button>
-          {editingId && <button type="button" className={styles.ghost} onClick={resetForm}>Cancelar</button>}
-        </div>
-      </form>
+      <div className={styles.toolbar}>
+        <button type="button" className={styles.primary}
+          onClick={() => { setAlert(''); setNotice(''); setDialog({ mode: 'create' }) }}>
+          Criar flashcard
+        </button>
+      </div>
 
       {alert && <p className={styles.alert} role="alert">{alert}</p>}
       {notice && <p className={styles.notice} role="status">{notice}</p>}
@@ -126,18 +90,30 @@ export function FlashcardsTab({
                 <p>{c.back}</p>
               </div>
               <div className={styles.itemActions}>
-                <button type="button" className={styles.ghost} aria-label={`Editar ${c.front}`}
-                  onClick={() => { setEditingId(c.flashcardId); setFront(c.front); setBack(c.back); setErrors({}) }}>
-                  Editar
+                <button type="button" className={styles.iconBtn} aria-label={`Editar ${c.front}`}
+                  title="Editar" onClick={() => { setNotice(''); setDialog({ mode: 'edit', card: c }) }}>
+                  <img src={editIcon} alt="" />
                 </button>
-                <button type="button" className={styles.ghostDanger} aria-label={`Excluir ${c.front}`}
-                  onClick={() => setToDelete(c)}>
-                  Excluir
+                <button type="button" className={styles.iconBtn} aria-label={`Excluir ${c.front}`}
+                  title="Excluir" onClick={() => setToDelete(c)}>
+                  <img src={deleteIcon} alt="" />
                 </button>
               </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {dialog?.mode === 'create' && (
+        <FlashcardDialog title="Novo flashcard" onSave={handleCreate} onCancel={() => setDialog(null)} />
+      )}
+      {dialog?.mode === 'edit' && (
+        <FlashcardDialog
+          title="Editar flashcard"
+          initial={{ front: dialog.card.front, back: dialog.card.back }}
+          onSave={(data) => handleUpdate(dialog.card.flashcardId, data)}
+          onCancel={() => setDialog(null)}
+        />
       )}
 
       {toDelete && (
