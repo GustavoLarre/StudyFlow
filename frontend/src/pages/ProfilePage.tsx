@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useProfile } from '../profile/ProfileContext'
 import { profileApi as defaultApi, type ProfileApi } from '../services/profileApi'
-import { logout } from '../services/authService'
+import {
+  getSignInMethod,
+  logout,
+  reauthenticate,
+  type SignInMethod,
+} from '../services/authService'
 import { validateUsername } from '../services/username'
+import { DeleteAccountDialog } from '../components/DeleteAccountDialog'
 import styles from './ProfilePage.module.css'
 
 type Status =
@@ -17,9 +23,15 @@ const errorMessage = (e: unknown) =>
 export function ProfilePage({
   profileApi = defaultApi,
   onLogout = logout,
+  signInMethod = getSignInMethod(),
+  onReauth = reauthenticate,
+  onDeleted = () => logout(),
 }: {
-  profileApi?: Pick<ProfileApi, 'update' | 'checkUsername'>
+  profileApi?: Pick<ProfileApi, 'update' | 'checkUsername' | 'remove'>
   onLogout?: () => Promise<unknown>
+  signInMethod?: SignInMethod
+  onReauth?: (password?: string) => Promise<void>
+  onDeleted?: () => Promise<unknown> | void
 }) {
   const { profile, refresh } = useProfile()
   const [name, setName] = useState('')
@@ -28,9 +40,12 @@ export function ProfilePage({
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const [notice, setNotice] = useState('')
   const [alert, setAlert] = useState('')
+  const [showDelete, setShowDelete] = useState(false)
+  const initialized = useRef(false)
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !initialized.current) {
+      initialized.current = true
       setName(profile.name ?? '')
       setUsername(profile.username ?? '')
     }
@@ -139,6 +154,21 @@ export function ProfilePage({
 
       {notice && <p className={styles.ok} role="status">{notice}</p>}
       {alert && <p className={styles.error} role="alert">{alert}</p>}
+
+      <div className={styles.card}>
+        <h2>Zona de perigo</h2>
+        <button type="button" className={styles.ghost} onClick={() => setShowDelete(true)}>Apagar conta</button>
+      </div>
+
+      {showDelete && (
+        <DeleteAccountDialog
+          method={signInMethod}
+          onReauth={onReauth}
+          onDelete={profileApi.remove}
+          onCancel={() => setShowDelete(false)}
+          onDeleted={() => void onDeleted()}
+        />
+      )}
 
       <button type="button" className={styles.ghost} onClick={() => void onLogout()}>Sair</button>
     </section>

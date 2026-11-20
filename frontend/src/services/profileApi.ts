@@ -11,7 +11,7 @@ export interface Profile {
   xp: { total: number; level: number; currentLevelXp: number; nextLevelXp: number }
 }
 
-export function createProfileApi(client: Pick<ApiClient, 'get' | 'put'>) {
+export function createProfileApi(client: Pick<ApiClient, 'get' | 'put' | 'delete'>) {
   return {
     get: async () => (await client.get<{ user: Profile }>('/me')).user,
     update: async (data: { username?: string; name?: string }) =>
@@ -21,6 +21,9 @@ export function createProfileApi(client: Pick<ApiClient, 'get' | 'put'>) {
         `/usernames/${encodeURIComponent(name)}/available`,
       )
       return { available, reason }
+    },
+    remove: async () => {
+      await client.delete('/me')
     },
   }
 }

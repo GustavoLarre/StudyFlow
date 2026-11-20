@@ -17,6 +17,7 @@ function setup(profile: Profile = PROFILE, overrides: Record<string, unknown> = 
   const api = {
     update: vi.fn().mockImplementation(async (d: object) => ({ ...profile, ...d })),
     checkUsername: vi.fn().mockResolvedValue({ available: true }),
+    remove: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   }
   const onLogout = vi.fn().mockResolvedValue(undefined)
@@ -53,7 +54,7 @@ describe('ProfilePage', () => {
 
   it('salva o nome aparado', async () => {
     const { api, user } = setup()
-    const input = await screen.findByLabelText('Nome')
+    const input = await screen.findByDisplayValue('Gustavo')
     await user.clear(input)
     await user.type(input, '  Gus  ')
     await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
@@ -64,17 +65,17 @@ describe('ProfilePage', () => {
 
   it('nome vazio não chama a API', async () => {
     const { api, user } = setup()
-    const input = await screen.findByLabelText('Nome')
+    const input = await screen.findByDisplayValue('Gustavo')
     await user.clear(input)
     await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
 
-    expect(screen.getByText('Informe o nome.')).toBeInTheDocument()
+    expect(await screen.findByText('Informe o nome.')).toBeInTheDocument()
     expect(api.update).not.toHaveBeenCalled()
   })
 
-  it('altera o username depois de checar a disponibilidade', async () => {
+   it('altera o username depois de checar a disponibilidade', async () => {
     const { api, user } = setup()
-    const input = await screen.findByLabelText('Nome de usuário')
+    const input = await screen.findByDisplayValue('gustavo')
     await user.clear(input)
     await user.type(input, 'novo.nome')
     await debounce()
@@ -109,9 +110,9 @@ describe('ProfilePage', () => {
     expect(screen.getByText(/já alterou/)).toBeInTheDocument()
   })
 
-  it('mostra o erro do backend ao falhar', async () => {
+   it('mostra o erro do backend ao falhar', async () => {
     const { user } = setup(PROFILE, { update: vi.fn().mockRejectedValue(new ApiError('Falha ao salvar.', 500)) })
-    await screen.findByLabelText('Nome')
+    await screen.findByDisplayValue('Gustavo')
     await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao salvar.')

@@ -34,4 +34,13 @@ describe('profileApi', () => {
     expect(api.get).toHaveBeenCalledWith('/usernames/a%20b/available')
     expect(result).toEqual({ available: false, reason: 'x' })
   })
+
+    it('remove chama DELETE /me', async () => {
+    const { api, profile } = build()
+    api.delete.mockResolvedValue({ success: true })
+
+    await profile.remove()
+
+    expect(api.delete).toHaveBeenCalledWith('/me')
+  })
 })
