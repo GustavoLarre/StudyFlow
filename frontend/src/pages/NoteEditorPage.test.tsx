@@ -162,4 +162,33 @@ describe('NoteEditorPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao salvar.')
   })
+
+  it('Enter no título leva o foco ao conteúdo, sem salvar nem quebrar linha', async () => {
+    const { notes, user } = setup('/materias/s1/notas/nova')
+
+    await user.type(screen.getByLabelText('Título da nota'), 'Meu título{Enter}')
+
+    expect(screen.getByLabelText('Conteúdo da nota')).toHaveFocus()
+    expect(screen.getByLabelText('Título da nota')).toHaveValue('Meu título')
+    expect(notes.create).not.toHaveBeenCalled()
+  })
+
+  it('o título é de uma linha: quebras coladas viram espaço', async () => {
+    const { user } = setup('/materias/s1/notas/nova')
+
+    await user.click(screen.getByLabelText('Título da nota'))
+    await user.paste('a\nb')
+
+    expect(screen.getByLabelText('Título da nota')).toHaveValue('a b')
+  })
+
+  it('Ctrl+S salva a nota', async () => {
+    const { notes, user } = setup('/materias/s1/notas/nova')
+
+    await user.type(screen.getByLabelText('Título da nota'), 'Redes')
+    await user.type(screen.getByLabelText('Conteúdo da nota'), 'TCP e IP')
+    await user.keyboard('{Control>}s{/Control}')
+
+    expect(notes.create).toHaveBeenCalledWith('s1', { title: 'Redes', content: 'TCP e IP' })
+  })
 })
