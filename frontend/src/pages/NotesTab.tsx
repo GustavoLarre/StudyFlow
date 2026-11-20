@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import deleteIcon from '../assets/tarefas-excluir.png'
 import { ApiError } from '../services/apiClient'
 import { notesApi, type GenerationResult, type Note, type NotesApi } from '../services/notesApi'
 import styles from './NotesTab.module.css'
@@ -100,8 +101,10 @@ export function NotesTab({ subjectId, notes: api = notesApi }: { subjectId: stri
                   onClick={() => void handleGenerate(n.noteId)}>
                   {generatingId === n.noteId ? 'Gerando...' : 'Gerar flashcards'}
                 </button>
-                <button type="button" className={styles.ghostDanger} aria-label={`Excluir ${n.title}`}
-                  onClick={() => setToDelete(n)}>Excluir</button>
+                <button type="button" className={styles.iconBtn} aria-label={`Excluir ${n.title}`}
+                  title="Excluir" onClick={() => setToDelete(n)}>
+                  <img src={deleteIcon} alt="" />
+                </button>
               </div>
             </li>
           ))}

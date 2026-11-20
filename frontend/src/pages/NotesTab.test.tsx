@@ -38,6 +38,14 @@ describe('NotesTab', () => {
     expect(await screen.findByText(`${'a'.repeat(120)}...`)).toBeInTheDocument()
   })
 
+  it('o botão de excluir é o ícone da lixeira, sem texto', async () => {
+    setup()
+    const button = await screen.findByRole('button', { name: 'Excluir HTTP' })
+
+    expect(button.querySelector('img')).toBeInTheDocument()
+    expect(button.textContent).toBe('')
+  })
+
   it('exclui com aviso de que os flashcards permanecem', async () => {
     const { notes, user } = setup()
     await screen.findByText('HTTP')

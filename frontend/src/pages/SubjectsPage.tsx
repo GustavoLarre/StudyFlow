@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import deleteIcon from '../assets/tarefas-excluir.png'
 import { subjectsApi, type Subject, type SubjectsApi } from '../services/subjectsApi'
 import styles from './SubjectsPage.module.css'
 
@@ -102,8 +103,10 @@ export function SubjectsPage({ subjects: api = subjectsApi }: { subjects?: Subje
                   <Link className={styles.itemLink} to={`/materias/${s.subjectId}`}>{s.title}</Link>
                   <button type="button" className={styles.ghost} aria-label={`Renomear ${s.title}`}
                     onClick={() => { setEditingId(s.subjectId); setEditTitle(s.title) }}>Renomear</button>
-                  <button type="button" className={styles.ghostDanger} aria-label={`Excluir ${s.title}`}
-                    onClick={() => setToDelete(s)}>Excluir</button>
+                  <button type="button" className={styles.iconBtn} aria-label={`Excluir ${s.title}`}
+                    title="Excluir" onClick={() => setToDelete(s)}>
+                    <img src={deleteIcon} alt="" />
+                  </button>
                 </>
               )}
             </li>

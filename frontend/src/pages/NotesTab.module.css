@@ -30,3 +30,9 @@
 .titleLink { color: var(--text); font-weight: 600; text-decoration: none; }
 .titleLink:hover { color: var(--accent-soft); }
 .date { font-size: 11px; color: var(--text-muted); }
+.iconBtn {
+  width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 10px; background: transparent; border: 1px solid var(--border); cursor: pointer;
+}
+.iconBtn:hover { background: var(--surface-2); border-color: var(--danger); }
+.iconBtn img { width: 20px; height: 20px; object-fit: contain; }

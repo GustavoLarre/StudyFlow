@@ -85,6 +85,14 @@ describe('SubjectsPage', () => {
     expect(await screen.findByText('Redes de Computadores')).toBeInTheDocument()
   })
 
+  it('o botão de excluir é o ícone da lixeira, sem texto', async () => {
+    setup()
+    const button = await screen.findByRole('button', { name: 'Excluir Redes' })
+
+    expect(button.querySelector('img')).toBeInTheDocument()
+    expect(button.textContent).toBe('')
+  })
+
   it('exclui só depois da confirmação, avisando sobre o conteúdo', async () => {
     const { subjects, user } = setup()
     await screen.findByText('Redes')
