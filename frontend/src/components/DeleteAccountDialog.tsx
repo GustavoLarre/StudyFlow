@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { translateAuthError } from '../services/authErrors'
-import styles from './ConfirmDialog.module.css'
+import styles from './DeleteAccountDialog.module.css'
 
 interface Props {
   method: 'password' | 'google'
@@ -31,26 +31,32 @@ export function DeleteAccountDialog({ method, onReauth, onDelete, onCancel, onDe
     }
   }
 
-  return (
+    return (
     <div className={styles.backdrop}>
-      <div className={styles.dialog} role="dialog" aria-modal="true">
-        <p>
+      <div className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="del-title">
+        <h2 id="del-title" className={styles.title}>Apagar sua conta</h2>
+        <p className={styles.warning}>
           Esta ação é irreversível. Suas matérias, notas, flashcards, tarefas, XP e nome de usuário
           serão apagados definitivamente.
         </p>
 
-        <label htmlFor="del-confirm">Digite EXCLUIR para confirmar</label>
-        <input id="del-confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <div className={styles.field}>
+          <label htmlFor="del-confirm" className={styles.label}>
+            Digite <strong>EXCLUIR</strong> para confirmar
+          </label>
+          <input id="del-confirm" className={styles.input} value={confirm}
+            autoComplete="off" onChange={(e) => setConfirm(e.target.value)} />
+        </div>
 
         {method === 'password' && (
-          <>
-            <label htmlFor="del-pass">Sua senha</label>
-            <input id="del-pass" type="password" value={password}
+          <div className={styles.field}>
+            <label htmlFor="del-pass" className={styles.label}>Sua senha</label>
+            <input id="del-pass" className={styles.input} type="password" value={password}
               onChange={(e) => setPassword(e.target.value)} />
-          </>
+          </div>
         )}
 
-        {error && <p role="alert">{error}</p>}
+        {error && <p className={styles.error} role="alert">{error}</p>}
 
         <div className={styles.actions}>
           <button type="button" className={styles.cancel} onClick={onCancel}>Cancelar</button>

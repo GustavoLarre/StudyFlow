@@ -1,0 +1,30 @@
+.backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+}
+.dialog {
+  width: 460px; max-width: calc(100vw - 48px); padding: 28px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.title { margin: 0; font-size: 20px; color: var(--danger); }
+.warning { margin: 0; line-height: 1.5; color: var(--text-muted); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 14px; font-weight: 500; }
+.label strong { color: var(--danger); letter-spacing: 0.04em; }
+.input {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+}
+.input:focus { outline: 2px solid var(--danger); border-color: transparent; }
+
+.error { margin: 0; font-size: 13px; color: var(--danger); }
+
+.actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.cancel, .danger { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; }
+.cancel { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.cancel:hover { background: var(--surface-2); }
+.danger { background: var(--danger); color: #fff; }
+.danger:disabled { opacity: 0.4; cursor: not-allowed; }

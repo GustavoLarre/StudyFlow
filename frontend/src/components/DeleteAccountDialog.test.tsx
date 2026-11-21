@@ -83,4 +83,11 @@ describe('DeleteAccountDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalled()
   })
+
+    it('tem título acessível e o campo de senha esconde o que é digitado', () => {
+    setup('password')
+
+    expect(screen.getByRole('dialog', { name: 'Apagar sua conta' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Sua senha')).toHaveAttribute('type', 'password')
+  })
 })
