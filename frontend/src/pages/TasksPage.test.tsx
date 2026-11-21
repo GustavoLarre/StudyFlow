@@ -112,6 +112,14 @@ describe('TasksPage', () => {
     expect(await screen.findByText('Estudar árvores')).toBeInTheDocument()
   })
 
+  it('o botão de excluir é o ícone da lixeira, sem texto', async () => {
+    setup()
+    const button = await screen.findByRole('button', { name: 'Excluir Estudar grafos' })
+
+    expect(button.querySelector('img')).toBeInTheDocument()
+    expect(button.textContent).toBe('')
+  })
+
   it('exclui só depois da confirmação', async () => {
     const { tasks, user } = setup()
     await screen.findByText('Estudar grafos')

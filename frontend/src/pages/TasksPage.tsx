@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { tasksApi, MAX_TASK_TEXT, type Task, type TasksApi } from '../services/tasksApi'
+import deleteIcon from '../assets/tarefas-excluir.png'
 import styles from './TasksPage.module.css'
 
 const errorMessage = (error: unknown) =>
@@ -109,12 +110,14 @@ export function TasksPage({ tasks: api = tasksApi }: { tasks?: TasksApi }) {
         <span className={styles.date}>{formatDate(t.date)}</span>
         <button type="button" className={styles.ghost} aria-label={`Editar ${t.text}`}
           onClick={() => { setEditingId(t.taskId); setEditText(t.text); setEditDate(t.date) }}>Editar</button>
-        <button type="button" className={styles.ghostDanger} aria-label={`Excluir ${t.text}`}
-          onClick={() => setToDelete(t)}>Excluir</button>
+        <button type="button" className={styles.iconBtn} aria-label={`Excluir ${t.text}`}
+          title="Excluir" onClick={() => setToDelete(t)}>
+          <img src={deleteIcon} alt="" />
+        </button>
       </li>
     )
   }
-
+  
   const pending = items.filter((t) => !t.completed).sort(byDate)
   const done = items.filter((t) => t.completed).sort(byDate)
 
