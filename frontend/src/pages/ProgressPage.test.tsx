@@ -15,13 +15,13 @@ const DATA: Progress = {
 const setup = (get = vi.fn().mockResolvedValue(DATA)) => render(<ProgressPage progress={{ get }} />)
 
 describe('ProgressPage', () => {
-  it('mostra nível, XP total e barra de progresso', async () => {
+    it('não mostra XP nem nível: isso fica só no Perfil', async () => {
     setup()
+    await screen.findByText('Redes')
 
-    expect(await screen.findByText('Nível 2')).toBeInTheDocument()
-    expect(screen.getByText('XP total: 120')).toBeInTheDocument()
-    expect(screen.getByText('20 / 200 XP')).toBeInTheDocument()
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '20')
+    expect(screen.queryByText(/Nível/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/XP total/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
   it('mostra o diagnóstico de cada matéria com as 5 categorias', async () => {

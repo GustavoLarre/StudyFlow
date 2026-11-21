@@ -23,22 +23,11 @@ export function ProgressPage({ progress: api = progressApi }: { progress?: Progr
   if (error) return <p className={styles.alert} role="alert">{error}</p>
   if (!data) return <p>Carregando...</p>
 
-  const { xp, subjects } = data
-  const pct = Math.min(100, Math.round((xp.currentLevelXp / xp.nextLevelXp) * 100))
+  const { subjects } = data
 
   return (
     <section className={styles.page}>
       <h1 className={styles.heading}>Progresso</h1>
-
-      <div className={styles.xpCard}>
-        <h2>Nível {xp.level}</h2>
-        <p>XP total: {xp.total}</p>
-        <div className={styles.bar} role="progressbar" aria-valuenow={xp.currentLevelXp}
-          aria-valuemin={0} aria-valuemax={xp.nextLevelXp}>
-          <div className={styles.barFill} style={{ width: `${pct}%` }} />
-        </div>
-        <p className={styles.muted}>{xp.currentLevelXp} / {xp.nextLevelXp} XP</p>
-      </div>
 
       <h2 className={styles.sub}>Diagnóstico por matéria</h2>
       {subjects.length === 0 ? (
@@ -71,7 +60,7 @@ export function ProgressPage({ progress: api = progressApi }: { progress?: Progr
       )}
 
       <p className={styles.legend}>
-        Legenda: "Novo" são flashcards ainda não revisados. 
+        Legenda: "Novo" são flashcards ainda não revisados.
       </p>
     </section>
   )
