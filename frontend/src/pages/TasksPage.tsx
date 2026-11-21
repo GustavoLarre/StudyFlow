@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import { tasksApi, MAX_TASK_TEXT, type Task, type TasksApi } from '../services/tasksApi'
+import editIcon from '../assets/tarefas-editar.png'
 import deleteIcon from '../assets/tarefas-excluir.png'
+import { tasksApi, MAX_TASK_TEXT, type Task, type TasksApi } from '../services/tasksApi'
 import styles from './TasksPage.module.css'
 
 const errorMessage = (error: unknown) =>
@@ -108,8 +109,10 @@ export function TasksPage({ tasks: api = tasksApi }: { tasks?: TasksApi }) {
           onChange={() => void handleToggle(t)} />
         <span className={t.completed ? styles.doneText : styles.text}>{t.text}</span>
         <span className={styles.date}>{formatDate(t.date)}</span>
-        <button type="button" className={styles.ghost} aria-label={`Editar ${t.text}`}
-          onClick={() => { setEditingId(t.taskId); setEditText(t.text); setEditDate(t.date) }}>Editar</button>
+        <button type="button" className={styles.iconBtn} aria-label={`Editar ${t.text}`}
+          title="Editar" onClick={() => { setEditingId(t.taskId); setEditText(t.text); setEditDate(t.date) }}>
+          <img src={editIcon} alt="" />
+        </button>
         <button type="button" className={styles.iconBtn} aria-label={`Excluir ${t.text}`}
           title="Excluir" onClick={() => setToDelete(t)}>
           <img src={deleteIcon} alt="" />
@@ -117,7 +120,7 @@ export function TasksPage({ tasks: api = tasksApi }: { tasks?: TasksApi }) {
       </li>
     )
   }
-  
+
   const pending = items.filter((t) => !t.completed).sort(byDate)
   const done = items.filter((t) => t.completed).sort(byDate)
 

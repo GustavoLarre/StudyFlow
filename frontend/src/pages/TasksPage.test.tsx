@@ -98,6 +98,14 @@ describe('TasksPage', () => {
     expect(await within(pending).findByText('Estudar grafos')).toBeInTheDocument()
   })
 
+  it('o botão de editar é o ícone do lápis, sem texto', async () => {
+    setup()
+    const button = await screen.findByRole('button', { name: 'Editar Estudar grafos' })
+
+    expect(button.querySelector('img')).toBeInTheDocument()
+    expect(button.textContent).toBe('')
+  })
+
   it('edita texto e data', async () => {
     const { tasks, user } = setup()
     await screen.findByText('Estudar grafos')

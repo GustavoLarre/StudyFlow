@@ -71,6 +71,14 @@ describe('SubjectsPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('O título deve ter no máximo 100 caracteres.')
   })
 
+  it('o botão de renomear é o ícone do lápis, sem texto', async () => {
+    setup()
+    const button = await screen.findByRole('button', { name: 'Renomear Redes' })
+
+    expect(button.querySelector('img')).toBeInTheDocument()
+    expect(button.textContent).toBe('')
+  })
+
   it('renomeia uma matéria', async () => {
     const { subjects, user } = setup()
     await screen.findByText('Redes')

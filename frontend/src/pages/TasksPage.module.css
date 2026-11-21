@@ -12,7 +12,8 @@
   width: 34px; height: 34px; flex-shrink: 0; display: grid; place-items: center;
   border-radius: 8px; background: transparent; border: 1px solid var(--border); cursor: pointer;
 }
-.iconBtn:hover { background: var(--surface-2); border-color: var(--danger); }
+.iconBtn:hover { background: var(--surface-2); border-color: var(--accent); }
+.iconBtn[title="Excluir"]:hover { border-color: var(--danger); }
 .iconBtn img { width: 18px; height: 18px; object-fit: contain; }
 .list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
